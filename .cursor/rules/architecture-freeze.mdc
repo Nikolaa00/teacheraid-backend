@@ -7,7 +7,7 @@ alwaysApply: true
 
 Working spec is `docs/spec/tea-for-the-boys.html`. Cite FR/BR/EC/UF/E. Feasibility PDF does not change the Spring Boot stack.
 
-Skeleton (empty hexagonal packages, Actuator health, ArchUnit, Docker Compose) is allowed. **Do not add** REST controllers, JPA entities, Flyway domain migrations, Security filter chains beyond health, ChatClient beans, or application use-cases until identity/roster work is explicitly requested.
+Skeleton plus Flyway `V1` school/roster tables is in progress (Phase 1.1). **Do not add** REST controllers, JPA entities, Security filter chains beyond health, ChatClient beans, or application use-cases until the matching sub-phase is explicitly requested (`1.2` kernel, `1.3` JPA, `1.4` JWT, …).
 
 - Empty cases: do not invent UX or extra APIs.
 - Headmaster is `school.headmaster_email`, never an `app_user`.

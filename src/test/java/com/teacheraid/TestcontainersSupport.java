@@ -5,7 +5,7 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
 
 /**
- * Testcontainers images for later feature tests. The skeleton does not start them.
+ * Shared Testcontainers images. Spring Boot tests that need Postgres start {@link #postgres()}.
  */
 public final class TestcontainersSupport {
 
