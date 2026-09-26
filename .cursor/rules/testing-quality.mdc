@@ -1,0 +1,17 @@
+---
+description: Testing standards — ArchUnit, Testcontainers, no silent product invention
+globs: "**/{*Test,*Tests,*.java}"
+alwaysApply: false
+---
+
+# Testing and quality
+
+- ArchUnit: `domain` must not depend on Spring Web, Spring AI, or Redis.
+- Spring Modulith `ApplicationModules.verify()`.
+- Testcontainers for Postgres and Redis when persistence or live clocks are involved. Do not use a shared laptop Postgres for tests.
+- State-machine tests for illegal session transitions when that aggregate exists.
+- Answer submit is idempotent (`client_answer_id`).
+- Characterization test for generation: a school email in emphasis must not reach `ChatClient`.
+- Never assert product behaviour that the spec left empty (E-*). Fail closed and cite the empty case.
+- Do not log or assert full answer bodies, reasons, or inbox text in test output.
+- Prefer slice tests. `@SpringBootTest` is for Modulith/security/WebSocket wiring, not every mapper.

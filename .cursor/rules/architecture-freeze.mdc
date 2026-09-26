@@ -1,0 +1,22 @@
+---
+description: Architecture freeze — skeleton allowed, no feature code until identity work is started
+alwaysApply: true
+---
+
+# Architecture freeze
+
+Working spec is `docs/spec/tea-for-the-boys.html`. Cite FR/BR/EC/UF/E. Feasibility PDF does not change the Spring Boot stack.
+
+Skeleton (empty hexagonal packages, Actuator health, ArchUnit, Docker Compose) is allowed. **Do not add** REST controllers, JPA entities, Flyway domain migrations, Security filter chains beyond health, ChatClient beans, or application use-cases until identity/roster work is explicitly requested.
+
+- Empty cases: do not invent UX or extra APIs.
+- Headmaster is `school.headmaster_email`, never an `app_user`.
+- Tenant is `school_id` from the principal, never a client-supplied school id alone.
+
+Modules: `identity` `school` `curriculum` `lesson` `generation` `live-session` `scoring` `practice` `reporting` `privacy` `focus`.
+
+**Out of v1:** universities, practical lessons, e-Дневник sync, parent login, billing, national library, streaks, chatbot, class reassignment, co-teaching, grades, GPS, extra device ids.
+
+Build order: identity/roster → lesson fixtures → live session → Spring AI → practice/reports → focus APIs. Do not skip to generation or live session.
+
+Canonical: `AGENTS.md`, `docs/spec/README.md`, `.cursor/skills/spring-boot-professional/`.

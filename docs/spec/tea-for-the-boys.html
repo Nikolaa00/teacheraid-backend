@@ -1,0 +1,1407 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TeacherAid v1 Specification</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400;1,8..60,600&family=Source+Sans+3:wght@400;600&family=Source+Code+Pro:wght@400;500&display=swap">
+<style>
+:root{
+  --paper:#F8F8F5; --ink:#1B1B19; --ink-2:#45453F; --ink-3:#77776F;
+  --rule:#D8D8D1; --rule-strong:#B4B4AB; --panel:#EEEEE8; --panel-2:#E4E4DD;
+  --accent:#A2352A; --accent-soft:rgba(162,53,42,.07); --accent-line:rgba(162,53,42,.45);
+  --serif:"Source Serif 4",Georgia,"Times New Roman",serif;
+  --sans:"Source Sans 3","Helvetica Neue",Arial,system-ui,sans-serif;
+  --mono:"Source Code Pro",ui-monospace,Menlo,Consolas,monospace;
+  --bar:52px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#191917; --ink:#EAE9E3; --ink-2:#BDBCB4; --ink-3:#8B8A82;
+    --rule:#33332E; --rule-strong:#4A4A43; --panel:#222220; --panel-2:#2B2B28;
+    --accent:#E27A68; --accent-soft:rgba(226,122,104,.10); --accent-line:rgba(226,122,104,.5);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#191917; --ink:#EAE9E3; --ink-2:#BDBCB4; --ink-3:#8B8A82;
+  --rule:#33332E; --rule-strong:#4A4A43; --panel:#222220; --panel-2:#2B2B28;
+  --accent:#E27A68; --accent-soft:rgba(226,122,104,.10); --accent-line:rgba(226,122,104,.5);
+  color-scheme:dark;
+}
+html{background:var(--paper)}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 17px/1.55 var(--serif);overflow:hidden;-webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%}
+*,*::before,*::after{box-sizing:border-box}
+a{color:inherit;text-decoration:underline;text-decoration-color:var(--rule-strong);text-underline-offset:2px}
+a:hover{text-decoration-color:var(--ink)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button{font:inherit;color:inherit}
+
+/* Top bar */
+.topbar{position:fixed;top:0;left:0;right:0;z-index:20;height:calc(var(--bar) + env(safe-area-inset-top,0px));padding-top:env(safe-area-inset-top,0px);padding-inline:16px;display:flex;align-items:center;gap:16px;background:var(--paper);border-bottom:1px solid var(--rule);font-family:var(--sans)}
+.topbar .doc{font-size:12.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
+.topbar .now{font:italic 400 15px var(--serif);color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1}
+.topbar .counter{font:500 13px var(--mono);font-variant-numeric:tabular-nums;color:var(--ink-2);white-space:nowrap}
+.tbtn{background:transparent;border:1px solid var(--rule-strong);border-radius:2px;padding:5px 11px;font:600 13px var(--sans);cursor:pointer;white-space:nowrap}
+.tbtn:hover{background:var(--panel)}
+@media (max-width:640px){.topbar .now{display:none}}
+
+/* Deck */
+.deck{position:fixed;top:calc(var(--bar) + env(safe-area-inset-top,0px));left:0;right:0;bottom:0;display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain}
+.deck::-webkit-scrollbar{display:none}
+.slide{position:relative;flex:0 0 100%;width:100%;height:100%;overflow-y:auto;overflow-x:hidden;scroll-snap-align:start;scroll-snap-stop:always;padding-block:40px calc(110px + env(safe-area-inset-bottom,0px));padding-inline:clamp(16px,5vw,72px)}
+.inner{max-width:1120px;margin-inline:auto;display:grid;grid-template-columns:200px minmax(0,1fr);gap:0 56px}
+.head{grid-column:1/-1;padding-bottom:26px;border-bottom:1px solid var(--ink);margin-bottom:36px}
+.eyebrow{display:block;font:600 12px var(--sans);letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3)}
+.head h1{font:600 clamp(30px,4vw,44px)/1.1 var(--serif);margin:8px 0 12px;text-wrap:balance;letter-spacing:-.01em}
+.head .def{font:italic 400 18px/1.45 var(--serif);color:var(--ink-2);max-width:62ch;margin:0}
+.head .stat{display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:16px;font:400 14px var(--sans);color:var(--ink-2)}
+.head .stat b{font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+.head .stat .e{color:var(--accent)}
+
+/* Side navigation inside a slide */
+.subnav{position:sticky;top:0;align-self:start;font-family:var(--sans);font-size:14px;padding-top:2px}
+.subnav .lbl{font-size:11px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);margin:0 0 10px}
+.subnav ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
+.subnav a{text-decoration:none;color:var(--ink-2);display:block;line-height:1.3}
+.subnav a:hover{color:var(--ink);text-decoration:underline}
+.subnav .cnt{font:500 12px var(--mono);color:var(--ink-3);margin-left:4px}
+@media (max-width:880px){
+  .inner{grid-template-columns:1fr;gap:0}
+  .subnav{position:static;margin-bottom:28px;padding:12px 14px;border:1px solid var(--rule);border-radius:2px}
+  .subnav ol{flex-direction:row;flex-wrap:wrap;gap:6px 16px}
+}
+
+/* Prose */
+.content{min-width:0}
+.content h2{font:600 24px/1.2 var(--serif);margin:44px 0 14px;padding-top:6px;letter-spacing:-.005em;scroll-margin-top:12px}
+.content h2:first-child{margin-top:0}
+.content h3{font:600 13px/1.3 var(--sans);letter-spacing:.07em;text-transform:uppercase;color:var(--ink-2);margin:28px 0 10px}
+.content p{max-width:68ch;margin:0 0 12px}
+.content ul,.content ol{max-width:68ch;margin:0 0 12px;padding-left:1.3em}
+.content li{margin:0 0 5px}
+.content li::marker{color:var(--ink-3)}
+.lead{font-size:19px;line-height:1.5}
+.small{font-size:15px;color:var(--ink-2)}
+.ref{font:400 12px var(--mono);color:var(--ink-3);white-space:nowrap;margin-left:.35em}
+.id{font:500 12.5px var(--mono);color:var(--ink-3);letter-spacing:.01em}
+.dev{font:400 13.5px/1.5 var(--mono);color:var(--ink-2);background:var(--panel);padding:8px 10px;border-radius:2px;max-width:68ch;margin:6px 0 12px;overflow-wrap:anywhere}
+.dev b{font-weight:500;color:var(--ink)}
+code{font:400 .92em var(--mono);background:var(--panel);padding:1px 4px;border-radius:2px}
+
+/* Items */
+.items{border-bottom:1px solid var(--rule);margin:0 0 18px}
+.item{display:grid;grid-template-columns:4.8em minmax(0,1fr);gap:0 12px;padding:11px 0;border-top:1px solid var(--rule);scroll-margin-top:12px}
+.item>.id{padding-top:4px}
+.item p{margin:0 0 6px}
+.item p:last-child{margin-bottom:0}
+.item ul{margin:4px 0 6px}
+@media (max-width:560px){.item{grid-template-columns:1fr;gap:2px}.item>.id{padding-top:0}}
+
+/* Labels */
+.lab{display:inline-block;font:600 10.5px/1.7 var(--sans);letter-spacing:.07em;text-transform:uppercase;padding:0 6px;border:1px solid var(--accent-line);color:var(--accent);border-radius:2px;vertical-align:middle;margin-left:.3em;white-space:nowrap}
+.lab.neutral{border-color:var(--rule-strong);color:var(--ink-2)}
+
+/* Empty case */
+.empty{border:1px dashed var(--accent-line);background:var(--accent-soft);padding:11px 14px;margin:12px 0;max-width:72ch;border-radius:2px;scroll-margin-top:12px}
+.empty .tag{display:flex;align-items:baseline;gap:10px;font:600 11px var(--sans);letter-spacing:.09em;text-transform:uppercase;color:var(--accent);margin-bottom:4px}
+.empty .tag .id{color:var(--accent);opacity:.8}
+.empty p{margin:0;font-size:16px}
+.empty p+p{margin-top:6px}
+.emptyset .empty{margin:8px 0}
+
+/* Cost note */
+.cost{border-left:2px solid var(--ink);padding:5px 0 5px 14px;margin:14px 0 16px;max-width:68ch;color:var(--ink-2);font-size:16px}
+.cost .eyebrow{margin-bottom:4px}
+.cost p{margin:0}
+.cost p+p{margin-top:6px}
+
+/* Tables */
+.tablewrap{overflow-x:auto;margin:12px 0 20px;max-width:100%}
+table{border-collapse:collapse;font:400 14.5px/1.45 var(--sans);width:100%;min-width:520px}
+th{text-align:left;font-weight:600;background:var(--panel);padding:8px 10px;border-bottom:1px solid var(--rule-strong);font-size:13px;letter-spacing:.02em;vertical-align:bottom}
+td{padding:8px 10px;border-bottom:1px solid var(--rule);vertical-align:top}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+table .id{white-space:nowrap}
+table.narrow{min-width:0}
+
+/* Flows */
+.flow{padding:20px 0 14px;border-top:1px solid var(--rule);scroll-margin-top:12px}
+.flow:last-of-type{border-bottom:1px solid var(--rule);margin-bottom:18px}
+.flow-h{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline;margin-bottom:6px}
+.flow-h h3{font:600 19px/1.25 var(--serif);text-transform:none;letter-spacing:0;color:var(--ink);margin:0}
+.meta{font:400 13.5px var(--sans);color:var(--ink-3)}
+.meta b{font-weight:600;color:var(--ink-2)}
+ol.steps{list-style:none;padding:0;margin:8px 0 10px;counter-reset:s;max-width:70ch}
+ol.steps li{position:relative;padding:5px 0 5px 2.6em;counter-increment:s}
+ol.steps li::before{content:counter(s);position:absolute;left:0;top:7px;width:21px;height:21px;font:500 12px/19px var(--mono);text-align:center;border:1px solid var(--rule-strong);border-radius:50%;color:var(--ink-2)}
+.states{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font:500 13px var(--mono);margin:10px 0 14px}
+.states span{border:1px solid var(--rule-strong);padding:4px 10px;border-radius:2px;background:var(--paper)}
+.states i{font-style:normal;color:var(--ink-3)}
+
+/* Glossary / definition lists */
+dl.gloss{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:7px 18px;font:400 15px/1.45 var(--sans);margin:10px 0 16px;max-width:72ch}
+dl.gloss dt{font-weight:600;white-space:nowrap}
+dl.gloss dd{margin:0;color:var(--ink-2)}
+@media (max-width:480px){dl.gloss{grid-template-columns:1fr;gap:2px 0}dl.gloss dd{margin-bottom:8px}}
+
+/* Legend */
+.legend{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:10px 16px;align-items:start;font:400 15px/1.45 var(--sans);margin:10px 0 18px;max-width:72ch}
+.legend .k{white-space:nowrap}
+@media (max-width:480px){.legend{grid-template-columns:1fr;gap:4px 0}.legend .k{margin-top:8px}}
+
+/* Cover category list */
+.cats{list-style:none;padding:0;margin:8px 0 18px;max-width:72ch;border-top:1px solid var(--rule)}
+.cats li{display:grid;grid-template-columns:2.2em minmax(0,1fr) max-content;gap:0 12px;align-items:baseline;padding:10px 0;border-bottom:1px solid var(--rule)}
+.cats .n{font:500 13px var(--mono);color:var(--ink-3)}
+.cats a{text-decoration:none;font-weight:600}
+.cats a:hover{text-decoration:underline}
+.cats .d{display:block;font:400 14.5px/1.4 var(--sans);color:var(--ink-2);margin-top:2px}
+.cats .st{font:400 13px var(--sans);color:var(--ink-3);white-space:nowrap;font-variant-numeric:tabular-nums}
+.cats .st.e{color:var(--accent)}
+@media (max-width:480px){.cats li{grid-template-columns:2.2em minmax(0,1fr)}.cats .st{grid-column:2}}
+
+/* Bottom navigation */
+.nav{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));display:flex;gap:8px;z-index:20}
+.nav button{width:42px;height:42px;border:1px solid var(--rule-strong);background:var(--paper);border-radius:2px;cursor:pointer;font:500 18px/1 var(--sans);display:grid;place-items:center}
+.nav button:hover{background:var(--panel)}
+.nav button:disabled{opacity:.3;cursor:default}
+.nav button:disabled:hover{background:var(--paper)}
+
+/* Contents dialog */
+dialog{border:1px solid var(--rule-strong);background:var(--paper);color:var(--ink);padding:0;width:min(92vw,600px);max-height:min(86vh,720px);border-radius:2px;font-family:var(--sans)}
+dialog::backdrop{background:rgba(0,0,0,.4)}
+.dl-h{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--rule)}
+.dl-h h2{font:600 15px var(--sans);letter-spacing:.06em;text-transform:uppercase;margin:0}
+.dl-list{list-style:none;margin:0;padding:8px 0;overflow-y:auto;max-height:calc(min(86vh,720px) - 60px)}
+.dl-list li{display:grid;grid-template-columns:2.4em minmax(0,1fr) max-content;gap:0 12px;align-items:baseline;padding:9px 18px}
+.dl-list li:hover{background:var(--panel)}
+.dl-list button{all:unset;cursor:pointer;display:contents}
+.dl-list .n{font:500 13px var(--mono);color:var(--ink-3)}
+.dl-list .t{font-size:16px;font-family:var(--serif)}
+.dl-list .s{font-size:12.5px;color:var(--ink-3);white-space:nowrap}
+.dl-list .s.e{color:var(--accent)}
+.dl-list li.cur .t{font-weight:600}
+
+/* Target flash */
+@keyframes flash{0%{background:var(--accent-soft)}100%{background:transparent}}
+.flash{animation:flash 1.8s ease-out}
+@media (prefers-reduced-motion:reduce){.flash{animation:none}.deck{scroll-behavior:auto}}
+
+/* Print: the deck becomes a sequential document */
+@media print{
+  body{overflow:visible;font-size:11.5pt}
+  .topbar,.nav,dialog{display:none !important}
+  .deck{position:static;display:block;overflow:visible;height:auto}
+  .slide{height:auto;overflow:visible;break-before:page;padding:0 0 24pt}
+  .slide:first-child{break-before:auto}
+  .inner{display:block}
+  .subnav{display:none}
+  .head{margin-bottom:18pt}
+  .empty,.cost,.item,.flow{break-inside:avoid}
+  a{text-decoration:none}
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <span class="doc">TeacherAid v1 Specification</span>
+  <span class="now" id="now"></span>
+  <span class="counter" id="counter"></span>
+  <button class="tbtn" id="open-contents" type="button" aria-haspopup="dialog">Contents</button>
+</header>
+
+<main class="deck" id="deck" aria-label="Specification slides">
+
+<!-- ============ COVER ============ -->
+<section class="slide" id="cover" data-title="Cover and how to read" data-short="Cover">
+<div class="inner">
+  <div class="head">
+    <span class="eyebrow">Official documentation · organized from the v1 feature specification</span>
+    <h1>TeacherAid v1 Specification</h1>
+    <p class="def">The build specification for TeacherAid version one, reorganized into seven categories so that a non-technical reader can find every decision, every rule and every gap.</p>
+    <div class="stat"><span>Source dated <b>15 September 2026</b></span><span>Organized <b>17 September 2026</b></span><span>Catalogued items <b id="c-items">—</b></span><span class="e">Empty cases <b id="c-empty">—</b></span></div>
+  </div>
+  <nav class="subnav" aria-label="On this slide"></nav>
+  <div class="content">
+
+    <h2 id="cov-source">About the source</h2>
+    <p class="lead">Everything in this document comes from one file: <code>feature-spec-v1.md</code>, kept in the TeacherAid second brain at <code>Areas/product/</code>. Its own header describes it as created on 15 September 2026, type "area", status "draft — not yet integrated into the vault". No author is named in the file.</p>
+    <p>The specification says of itself that it is "written for the developer who will build it", that it "says what exists, how it behaves, and what happens when it fails", and that where it disagrees with an older product note, the specification is right.<span class="ref">§1</span></p>
+
+    <h2 id="cov-rules">How this document was made</h2>
+    <ul>
+      <li><b>One source only.</b> Nothing was taken from the older notes the specification refers to (features, product-overview, user-flows, technical-architecture, data-and-privacy, the handbook). Where the specification is silent, the gap is marked, not filled.</li>
+      <li><b>No invention.</b> Two categories — user stories and acceptance criteria — contain only material the specification itself frames that way. It frames none, so both are recorded as empty cases with pointers to the nearest material.</li>
+      <li><b>Every statement is traceable.</b> A reference such as <span class="ref">§5.4</span> points to the numbered section of the source file. Items carry stable identifiers (FR-12, BR-7, EC-3, UF-8, E-21) so they can be cited in meetings, tickets and contracts.</li>
+      <li><b>Wording follows the source.</b> Sentences are rewritten for a general reader, but the facts, numbers and exclusions are the specification's own. Macedonian terms stay in Cyrillic where they are the real name of a thing.</li>
+    </ul>
+
+    <h2 id="cov-legend">Legend</h2>
+    <div class="legend">
+      <span class="k"><span class="ref" style="margin:0">§4.2</span></span><span>The section of the source specification the statement comes from.</span>
+      <span class="k"><span class="lab" style="margin:0">Empty case</span></span><span>The specification does not say. Left open on purpose, numbered E-01 onward, and collected in the register on the last slide.</span>
+      <span class="k"><span class="lab" style="margin:0">Proposed</span></span><span>A value the specification suggests but explicitly marks "not yet decided, needs sign-off".</span>
+      <span class="k"><span class="lab" style="margin:0">(verify)</span></span><span>The specification's own mark for a fact nobody has checked yet.</span>
+      <span class="k"><span class="lab neutral" style="margin:0">Not in v1</span></span><span>Explicitly excluded by the specification, with its reason.</span>
+      <span class="k"><span class="eyebrow" style="display:inline">Cost of this decision</span></span><span>The specification's own note on the price a choice carries — "not an argument against it; a note so nobody rediscovers it during a pilot".</span>
+    </div>
+
+    <h2 id="cov-cats">The seven categories</h2>
+    <ol class="cats" id="cat-list">
+      <li><span class="n">1</span><span><a href="#context">Product and business context</a><span class="d">What the product is, who it is for, what v1 includes and excludes, the assumptions it rests on.</span></span><span class="st" data-count="context"></span></li>
+      <li><span class="n">2</span><span><a href="#stories">User stories and use cases</a><span class="d">How each kind of user would describe what they need. The specification contains none.</span></span><span class="st" data-count="stories"></span></li>
+      <li><span class="n">3</span><span><a href="#flows">User flows</a><span class="d">The step-by-step sequences the specification describes, from preparing a lesson to the monthly report.</span></span><span class="st" data-count="flows"></span></li>
+      <li><span class="n">4</span><span><a href="#requirements">Functional requirements</a><span class="d">What the system does and has, area by area.</span></span><span class="st" data-count="requirements"></span></li>
+      <li><span class="n">5</span><span><a href="#rules">Business rules</a><span class="d">The fixed policies and constraints, with the reasoning the specification gives for each.</span></span><span class="st" data-count="rules"></span></li>
+      <li><span class="n">6</span><span><a href="#edge">Edge cases and exceptions</a><span class="d">Unusual situations and what happens in each — and the situations the specification does not cover.</span></span><span class="st" data-count="edge"></span></li>
+      <li><span class="n">7</span><span><a href="#acceptance">Acceptance criteria</a><span class="d">The conditions under which a feature counts as done. The specification contains none.</span></span><span class="st" data-count="acceptance"></span></li>
+      <li><span class="n">A</span><span><a href="#appendix">Appendix</a><span class="d">The register of all empty cases, what the specification changes in earlier notes, and a glossary.</span></span><span class="st" data-count="appendix"></span></li>
+    </ol>
+
+    <h2 id="cov-nav">Reading this document</h2>
+    <p>Each category is one slide. Move between slides with the arrow buttons at the bottom right, the left and right arrow keys, or the Contents button at the top. Every slide scrolls on its own; the list on the left of each slide jumps within it. The address bar keeps the current slide, so a link to <code>#rules</code> opens the business rules directly. Printing lays the slides out one after another as a single document.</p>
+
+  </div>
+</div>
+</section>
+
+<!-- ============ 1. CONTEXT ============ -->
+<section class="slide" id="context" data-title="1 · Product and business context" data-short="Context">
+<div class="inner">
+  <div class="head">
+    <span class="eyebrow">Category 1 of 7</span>
+    <h1>Product and business context</h1>
+    <p class="def">What TeacherAid v1 is, where it is meant to be used, what is deliberately left out, and the unverified assumptions the whole specification rests on.</p>
+    <div class="stat" data-stat></div>
+  </div>
+  <nav class="subnav" aria-label="On this slide"></nav>
+  <div class="content">
+
+    <h2 id="ctx-what">What the product is</h2>
+    <p class="small">Composed only from the specification's own sections; each clause cites where it comes from.</p>
+    <p class="lead">A teacher prepares a lesson in advance by picking a unit from the pre-loaded national e-учебник. The system generates an opener, five to eight pop-up questions with answers and explanations, a suggested timer for each, and a review summary — in Macedonian, all editable.<span class="ref">§4.1</span></p>
+    <p>In class, the teacher runs the lesson from a laptop with two browser windows: a class view on the projector and a private console on the laptop screen.<span class="ref">§5.2</span> Students join on their own phones by scanning a QR code that changes every 30 seconds, signed in with their school email account.<span class="ref">§5.4</span> A focus lock — a native phone app that keeps distracting apps closed — is mandatory; without it a student cannot join.<span class="ref">§6.1</span></p>
+    <p>The lesson opens with a prediction or a debate: students vote, then write one line of reasoning, and earn points for the reason whether it was right or wrong.<span class="ref">§5.5</span> During teaching, the teacher fires pop-up questions with timers at moments of their choosing.<span class="ref">§5.6</span> A student can send the teacher a question that classmates never see attributed.<span class="ref">§5.7</span> Points, badges and per-semester leaderboards run throughout.<span class="ref">§13</span></p>
+    <p>When the teacher presses End, points settle, attendance is written, the list of absent students appears formatted for copying into e-Дневник, and the most-missed questions are reviewed.<span class="ref">§5.10, §8.1, §8.2</span> Afterwards the teacher can send an optional practice set assembled from that class's own missed questions,<span class="ref">§8.3</span> and sees attendance, points and per-topic results per student on a dashboard.<span class="ref">§8.4, §9.1</span> A school admin manages classes and rosters and sees which teachers are using it;<span class="ref">§9.2</span> the headmaster receives a monthly PDF report by email and never logs in.<span class="ref">§9.3</span></p>
+
+    <h2 id="ctx-scope">Scope of v1</h2>
+    <div class="items">
+      <div class="item" id="ctx-1"><span class="id">CTX-1</span><div><p><b>Where.</b> Secondary schools in North Macedonia — гимназија, стручно and уметничко.<span class="ref">§2</span></p></div></div>
+      <div class="item" id="ctx-2"><span class="id">CTX-2</span><div><p><b>Pilot subjects.</b> History, electronics and physics. These three have their curriculum and e-учебници loaded properly. Any other subject works from the teacher's own input, with no curriculum grounding.<span class="ref">§2</span></p></div></div>
+      <div class="item" id="ctx-3"><span class="id">CTX-3</span><div><p><b>Interface language.</b> Macedonian only.<span class="ref">§2</span></p></div></div>
+      <div class="item" id="ctx-4"><span class="id">CTX-4</span><div><p><b>Session size.</b> The specification works from a "35-student session assumption".<span class="ref">§2</span></p></div></div>
+      <div class="item" id="ctx-5"><span class="id">CTX-5</span><div><p><b>Theory periods only.</b> Practical and laboratory lessons (практична настава) are excluded: a 20-second timed question does not fit a student with a soldering iron in both hands.<span class="ref">§2</span></p></div></div>
+    </div>
+
+    <h3>Explicitly out of v1</h3>
+    <p class="small">The specification's own exclusion table, with its reasons. These are decisions, not gaps.</p>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Not in v1</th><th>Reason given</th></tr></thead>
+      <tbody>
+        <tr><td>Universities</td><td>No headmaster, no attendance mandate, lectures of 90+ minutes, halls far beyond the 35-student session assumption, and students who are legal adults — so a mandatory focus lock has no institutional mandate behind it. "A second product shape."</td></tr>
+        <tr><td>Practical / лабораториска настава</td><td>A 20-second timed question does not fit practical work. Theory periods only.</td></tr>
+        <tr><td>National leaderboard</td><td>Meaningless across three pilot schools.</td></tr>
+        <tr><td>Streaks</td><td>Not proven with a real class yet.</td></tr>
+        <tr><td>Open-ended teacher chatbot</td><td>Replaced by fixed one-tap refinements (§4.6).</td></tr>
+        <tr><td>e-Дневник sync</td><td>Depends on МОН. "Never promise it."</td></tr>
+        <tr><td>Albanian-language interface</td><td>After the Macedonian corpus is proven.</td></tr>
+        <tr><td>Timetable / periods</td><td>Deliberately rejected (§5.1).</td></tr>
+        <tr><td>Parent app or parent login</td><td>Parents are reached by the school, on paper.</td></tr>
+        <tr><td>Per-student extra time</td><td>Recorded as a known limitation (§10.4).</td></tr>
+        <tr><td>Self-serve data export and deletion</td><td>Manual, by support (§11.5).</td></tr>
+        <tr><td>Reassigning a class to another teacher</td><td>No answer in v1 for maternity leave, illness or a teacher leaving.</td></tr>
+        <tr><td>A second teacher on one class</td><td>No co-teaching, no substitutes.</td></tr>
+        <tr><td>In-app billing</td><td>Pricing is being reconsidered. Out of scope entirely.</td></tr>
+      </tbody>
+    </table></div>
+
+    <aside class="cost"><span class="eyebrow">Cost of this decision — practical lessons</span><p>In a technical school a large share of periods are практична настава. Excluding them structurally halves lessons-per-teacher, which is the retention metric the channels note says to intervene on below two per week. Expect pilot usage numbers to look worse than the product deserves, and measure per <i>theory</i> period rather than per period.<span class="ref">§2</span></p></aside>
+    <aside class="cost"><span class="eyebrow">Cost of this decision — pilot subjects</span><p>History, electronics and physics point at a стручно or technical school. Every business note in the vault assumes a private гимназија beachhead. One of the two is out of date; that is a business decision, not a product one, but the build should not assume гимназија.<span class="ref">§2</span></p></aside>
+
+    <h2 id="ctx-who">Who uses it</h2>
+    <p>Three accounts and one non-account. The full permissions of each are in <a href="#fr-roles">Functional requirements</a>.</p>
+    <div class="items">
+      <div class="item" id="ctx-6"><span class="id">CTX-6</span><div><p><b>Teacher</b> — signs in with email and password; creates and runs lessons; sees only their own classes.<span class="ref">§3.1</span></p></div></div>
+      <div class="item" id="ctx-7"><span class="id">CTX-7</span><div><p><b>Student</b> — signs in with the school-issued email account, which is their identity for attendance, points, focus flags and per-topic results.<span class="ref">§3.2</span></p></div></div>
+      <div class="item" id="ctx-8"><span class="id">CTX-8</span><div><p><b>School admin</b> — the school secretary or IT person; manages classes, rosters and staff; sees whether teaching is happening, never what any child answered.<span class="ref">§3.3</span></p></div></div>
+      <div class="item" id="ctx-9"><span class="id">CTX-9</span><div><p><b>Headmaster</b> — no account. Receives a monthly report by email. "This is decided and stays decided."<span class="ref">§3.4</span></p></div></div>
+    </div>
+
+    <h2 id="ctx-why">Business reasoning the specification records</h2>
+    <p class="small">The specification explains why several features exist in business terms. Those explanations are collected here; the features themselves are on later slides.</p>
+    <div class="items">
+      <div class="item" id="ctx-10"><span class="id">CTX-10</span><div><p><b>The school library</b> (every teacher's saved lessons visible to colleagues in the same school) is "what makes a whole-staff licence pay off immediately: one keen teacher's work seeds the building instead of fifty-five people each paying the same setup cost alone." It is also "the first safe step toward the national corpus named as the moat" in the competitors note.<span class="ref">§4.7</span></p></div></div>
+      <div class="item" id="ctx-11"><span class="id">CTX-11</span><div><p><b>One lesson, many classes</b> is "what makes the ~400 generations per teacher per year in the cost-structure note real rather than aspirational", and lets a teacher compare how two classes did on the same question.<span class="ref">§4.5</span></p></div></div>
+      <div class="item" id="ctx-12"><span class="id">CTX-12</span><div><p><b>The nudge</b> (a quiet console suggestion when no question has been fired for several minutes) protects the teacher who got absorbed in teaching — "the failure mode that produces an empty dashboard and a school that looks inactive".<span class="ref">§5.6</span></p></div></div>
+      <div class="item" id="ctx-13"><span class="id">CTX-13</span><div><p><b>The admin's usage overview</b> is "the early warning for a school where only the champion teacher is active", which "somebody inside the building needs to see before renewal month, not after".<span class="ref">§9.2</span></p></div></div>
+      <div class="item" id="ctx-14"><span class="id">CTX-14</span><div><p><b>The headmaster report</b> is split into a forwardable page one and a headmaster-only page two because "a school ranked ninth of twelve will not forward a page that says so", and in a twelve-school pilot most schools are outside the top few.<span class="ref">§9.3</span></p></div></div>
+      <div class="item" id="ctx-15"><span class="id">CTX-15</span><div><p><b>The staff-access log</b> is "the most convincing single thing to show a headmaster on the data question".<span class="ref">§11.4</span></p></div></div>
+      <div class="item" id="ctx-16"><span class="id">CTX-16</span><div><p><b>The absentee list</b> is "the smallest feature in the spec and probably the moment a teacher first feels the product saved them something".<span class="ref">§8.1</span></p></div></div>
+      <div class="item" id="ctx-17"><span class="id">CTX-17</span><div><p><b>Legitimacy with МОН</b> (through cleared e-учебник rights) "is the main defence against Curipod" — the only competitor the specification names.<span class="ref">§4.1</span></p></div></div>
+      <div class="item" id="ctx-18"><span class="id">CTX-18</span><div><p><b>Onboarding at scale.</b> The guided first lesson "has to work fifty-five times in one week without a founder in the room, because the whole staff arrives at once rather than one volunteer at a time".<span class="ref">§10.2</span></p></div></div>
+      <div class="item" id="ctx-19"><span class="id">CTX-19</span><div><p><b>The retention metric</b> the specification cites is lessons-per-teacher, with intervention below two per week; because practical lessons are excluded, it should be measured per theory period.<span class="ref">§2</span></p></div></div>
+    </div>
+
+    <h2 id="ctx-legal">Blocking legal item</h2>
+    <div class="items">
+      <div class="item" id="ctx-20"><span class="id">CTX-20</span><div><p>The national e-учебници are published under МОН and written by named authors. Pre-loading them centrally into a commercial product "is a rights question that must be resolved with МОН/БРО <b>before this feature ships</b> — alongside the ДПА and the privacy notice already budgeted for a lawyer". The specification calls this "not a launch-and-see item" and "the kind of thing that becomes a headline if discovered later".<span class="ref">§4.1</span></p></div></div>
+    </div>
+
+    <h2 id="ctx-assume">Open assumptions the specification rests on</h2>
+    <p>The specification lists six unverified facts and states what breaks if each is wrong. Assumption A is called "the single largest unverified assumption in the spec".<span class="ref">§3.2, §14</span></p>
+    <div class="tablewrap"><table>
+      <thead><tr><th>#</th><th>Assumption</th><th>What breaks if wrong</th><th>Evidence needed</th></tr></thead>
+      <tbody>
+        <tr><td><span class="id">A</span></td><td>Every target school issues student mailboxes</td><td>The entire login design. No student can join.</td><td>Confirm with the pilot school before any build <span class="lab">(verify)</span></td></tr>
+        <tr><td><span class="id">B</span></td><td>e-учебник rights can be cleared with МОН/БРО</td><td>The primary planning input, and the legitimacy argument</td><td>A written answer before the feature ships</td></tr>
+        <tr><td><span class="id">C</span></td><td>A class will give up 45 minutes for a setup lesson before seeing any value</td><td>Adoption; the first impression is a support session</td><td>Ask the pilot teacher directly</td></tr>
+        <tr><td><span class="id">D</span></td><td>Mandatory focus lock does not trigger the parent complaint the old design avoided</td><td>The pilot, and the parent-facing answer</td><td>Pilot; parent notice reviewed before week one</td></tr>
+        <tr><td><span class="id">E</span></td><td>Teachers and parents accept per-student assessment data being stored</td><td>The ДПА, and the "never grades anyone" position</td><td>Ask the advising teacher and a parent representative</td></tr>
+        <tr><td><span class="id">F</span></td><td>Apple grants the Family Controls entitlement in time</td><td>No iOS students at all</td><td>Start the request immediately; it takes weeks</td></tr>
+      </tbody>
+    </table></div>
+
+    <h2 id="ctx-empty">Empty cases in this category</h2>
+    <div class="emptyset">
+      <div class="empty" id="e-01"><span class="tag"><span class="id">E-01</span>Empty case · pilot size</span><p>The specification mentions "three pilot schools" (§2, national leaderboard row) and "a twelve-school pilot" (§9.3). It does not reconcile the two numbers.</p></div>
+      <div class="empty" id="e-02"><span class="tag"><span class="id">E-02</span>Empty case · the pilot school</span><p>"The pilot school", "the pilot teacher" and "the advising teacher" (§14) are referred to but never named.</p></div>
+      <div class="empty" id="e-03"><span class="tag"><span class="id">E-03</span>Empty case · pricing and licence</span><p>"Pricing is being reconsidered. Out of scope entirely" (§2). A "whole-staff licence" is mentioned (§4.7) with no terms.</p></div>
+      <div class="empty" id="e-04"><span class="tag"><span class="id">E-04</span>Empty case · timeline</span><p>No build, pilot or launch dates are given anywhere in the specification.</p></div>
+      <div class="empty" id="e-05"><span class="tag"><span class="id">E-05</span>Empty case · who builds it</span><p>The document is "written for the developer who will build it" (§1). No developer, team or company structure is named.</p></div>
+      <div class="empty" id="e-06"><span class="tag"><span class="id">E-06</span>Empty case · market and competition</span><p>Only Curipod is named, once, as the competitor that МОН legitimacy defends against (§4.1). No market size, positioning or other competitors appear in the specification.</p></div>
+      <div class="empty" id="e-07"><span class="tag"><span class="id">E-07</span>Empty case · author</span><p>The file header records a creation date, a type and a status. It does not record who wrote it.</p></div>
+      <div class="empty" id="e-08"><span class="tag"><span class="id">E-08</span>Empty case · success measures for v1</span><p>The only metric the specification cites is lessons-per-teacher with intervention below two per week (§2), borrowed from another note. No v1 targets — pilot size, usage, satisfaction or renewal — are set here.</p></div>
+    </div>
+
+  </div>
+</div>
+</section>
+<!-- ============ 2. USER STORIES ============ -->
+<section class="slide" id="stories" data-title="2 · User stories and use cases" data-short="User stories" data-empty-slide="1">
+<div class="inner">
+  <div class="head">
+    <span class="eyebrow">Category 2 of 7</span>
+    <h1>User stories and use cases</h1>
+    <p class="def">Short statements of what each kind of user needs and why ("As a teacher, I want … so that …"), and named scenarios of the product in use.</p>
+    <div class="stat" data-stat></div>
+  </div>
+  <nav class="subnav" aria-label="On this slide"></nav>
+  <div class="content">
+
+    <h2 id="st-status">Status: empty</h2>
+    <div class="empty" id="e-09"><span class="tag"><span class="id">E-09</span>Empty case · user stories</span><p>The specification contains no user stories. No sentence in it takes the form "as a [role], I want [something] so that [outcome]", and no section is labelled as stories or requirements-from-the-user's-side.</p><p>By the rule chosen for this document, none have been derived. Deriving them would mean deciding, on the team's behalf, which motivations each role has — and that is a decision the specification does not make.</p></div>
+    <div class="empty" id="e-10"><span class="tag"><span class="id">E-10</span>Empty case · use cases</span><p>The specification contains no section framed as use cases (named scenarios with an actor, a goal, preconditions and a main path). Sequenced behaviour does appear — it is recorded on the <a href="#flows">User flows</a> slide as flows, because that is how the specification presents it.</p></div>
+    <div class="empty" id="e-11"><span class="tag"><span class="id">E-11</span>Empty case · personas</span><p>Beyond the four roles (teacher, student, school admin, headmaster), the specification describes no personas. The most detail it gives is that the admin is "the school secretary or IT person" (§3.3) and that the whole staff of a school arrives at once rather than one volunteer at a time (§10.2).</p></div>
+
+    <h2 id="st-nearest">What the specification has instead, and where it is in this document</h2>
+    <p>A reader who needs user stories will find the raw material in three places. It has been kept in the category the specification frames it in, not restated here as stories.</p>
+    <div class="tablewrap"><table>
+      <thead><tr><th>What the specification contains</th><th>Where in the source</th><th>Where in this document</th></tr></thead>
+      <tbody>
+        <tr><td>"Can" and "Cannot" lists for teacher, student and school admin — what each role is allowed to do</td><td>§3.1, §3.2, §3.3</td><td><a href="#fr-roles">Functional requirements · Accounts and roles</a></td></tr>
+        <tr><td>Sequenced behaviour: creating a lesson, joining, the opener, pop-ups, ending, practice sets, onboarding, the report, roster changes</td><td>§4.1, §5.3–§5.10, §8, §9.3, §10, §12</td><td><a href="#flows">User flows</a></td></tr>
+        <tr><td>Situations and how they are handled: a bad question, a dropped connection, a student without a phone, a forgotten End</td><td>§5.8, §5.9, §6.4, §7.1, §5.10</td><td><a href="#edge">Edge cases and exceptions</a></td></tr>
+        <tr><td>Motivating sentences that read like the "so that" of a story — "the teacher retypes four names instead of checking thirty"; "a headmaster who needs last month's figures for the municipality does not have to ask anyone"</td><td>§8.1, §9.3</td><td>Kept with the requirement they justify: <a href="#fr-53">FR-53</a>, <a href="#fr-59">FR-59</a></td></tr>
+        <tr><td>Business reasons for features (library, nudge, usage overview, report split)</td><td>§4.5, §4.7, §5.6, §9.2, §9.3, §11.4</td><td><a href="#ctx-why">Context · Business reasoning</a></td></tr>
+      </tbody>
+    </table></div>
+
+    <h2 id="st-fill">To fill this category</h2>
+    <p>The team would need to write the stories themselves. The roles are fixed (§3), the capabilities per role are fixed (§3.1–§3.3), and the flows on the next slide give the sequence — so the missing part is only the stated motivation per story, which must come from the team or from the teacher and headmaster conversations the specification refers to (§14).</p>
+
+  </div>
+</div>
+</section>
+
+<!-- ============ 3. USER FLOWS ============ -->
+<section class="slide" id="flows" data-title="3 · User flows" data-short="User flows">
+<div class="inner">
+  <div class="head">
+    <span class="eyebrow">Category 3 of 7</span>
+    <h1>User flows</h1>
+    <p class="def">The step-by-step sequences the specification describes: who starts each one, what triggers it, the steps in the order given, and what it produces. Only sequences the specification actually spells out are included.</p>
+    <div class="stat" data-stat></div>
+  </div>
+  <nav class="subnav" aria-label="On this slide"></nav>
+  <div class="content">
+
+    <h2 id="uf-prepare">Preparing a lesson</h2>
+
+    <div class="flow" id="uf-1">
+      <div class="flow-h"><span class="id">UF-1</span><h3>Creating a lesson from the e-учебник</h3><span class="meta"><b>Who:</b> teacher · <b>Source:</b> §4.1</span></div>
+      <p class="small">This is the primary way a lesson is made. The specification describes it as "two taps" plus an optional sentence.</p>
+      <ol class="steps">
+        <li>The teacher picks the subject, the year and the unit from the pre-loaded e-учебник contents.</li>
+        <li>Optionally, the teacher adds one sentence of emphasis — the specification's examples are "focus on the exam question" and "they struggled with this last year".</li>
+        <li>Generation returns the opener, 5–8 pop-up questions with answers and explanations, a suggested timer per question, and the review summary. All of it is in Macedonian and all of it is editable.</li>
+        <li>The teacher reviews, edits inline or applies a one-tap refinement (<a href="#uf-3">UF-3</a>), and saves.</li>
+      </ol>
+      <p><b>Result:</b> a saved lesson — a reusable object that can be run many times (§4) and is visible to colleagues in the same school through the library (<a href="#uf-4">UF-4</a>).</p>
+      <p class="small">TeacherAid pre-loads and chunks the e-учебници for the three pilot subjects, per unit. Teachers do not upload them.<span class="ref">§4.1</span></p>
+    </div>
+
+    <div class="flow" id="uf-2">
+      <div class="flow-h"><span class="id">UF-2</span><h3>Creating a lesson without a loaded book — the fallback</h3><span class="meta"><b>Who:</b> teacher · <b>Source:</b> §4.1</span></div>
+      <p>"Type three sentences" is now the fallback path, used when there is no loaded book for that subject, or when the teacher wants something off-book. The specification says it "still works" and is "no longer the headline". No further steps are described.</p>
+    </div>
+
+    <div class="flow" id="uf-3">
+      <div class="flow-h"><span class="id">UF-3</span><h3>Refining a generated lesson</h3><span class="meta"><b>Who:</b> teacher · <b>Source:</b> §4.6</span></div>
+      <p>On the generated lesson there is a fixed row of one-tap actions. The teacher taps one:</p>
+      <ul>
+        <li>Easier</li>
+        <li>Harder</li>
+        <li>More questions</li>
+        <li>Make the opener a debate (or a prediction)</li>
+        <li>Shorter timers</li>
+      </ul>
+      <p>There is no free-text chat. These actions cover the structural changes that inline editing cannot do — "turning a prediction opener into a debate is not an edit to a field".</p>
+    </div>
+
+    <div class="flow" id="uf-4">
+      <div class="flow-h"><span class="id">UF-4</span><h3>Reusing a colleague's lesson from the school library</h3><span class="meta"><b>Who:</b> teacher · <b>Source:</b> §4.7</span></div>
+      <ol class="steps">
+        <li>A teacher sees a lesson another teacher in the same school has saved.</li>
+        <li>They copy it into their own account.</li>
+        <li>They edit their copy. The original is never modified by a copy.</li>
+      </ol>
+      <p class="small">No national library, no cross-school sharing, no public lessons in v1.</p>
+    </div>
+
+    <div class="flow" id="uf-5">
+      <div class="flow-h"><span class="id">UF-5</span><h3>Running one lesson for several classes</h3><span class="meta"><b>Who:</b> teacher · <b>Source:</b> §4.5</span></div>
+      <p>The teacher runs the same lesson for II-1, II-2 and II-3. Each run is its own session with its own attendance, answers, points and results. Editing the lesson between runs affects later runs, not the record of earlier ones.</p>
+    </div>
+
+    <h2 id="uf-live">The live session</h2>
+
+    <div class="flow" id="uf-6">
+      <div class="flow-h"><span class="id">UF-6</span><h3>Setting up the room: two windows</h3><span class="meta"><b>Who:</b> teacher · <b>Source:</b> §5.2</span></div>
+      <p>The teacher runs the lesson from a laptop with two browser windows. The <b>class view</b> is projected; the <b>console</b> stays on the laptop screen and is never projected. The class view must be openable as a separate window with one click, "not by dragging" — setting up an extended display with thirty students waiting is named as a real friction point, and onboarding (<a href="#uf-18">UF-18</a>) must cover it explicitly.</p>
+    </div>
+
+    <div class="flow" id="uf-7">
+      <div class="flow-h"><span class="id">UF-7</span><h3>The session, state by state</h3><span class="meta"><b>Who:</b> teacher advances · <b>Source:</b> §5.3</span></div>
+      <div class="states"><span>lobby</span><i>→</i><span>opener</span><i>→</i><span>teaching</span><i>→</i><span>review</span><i>→</i><span>ended</span></div>
+      <p>The teacher advances the state. The server is the timer authority for every countdown; the phones and the class view only render it.</p>
+    </div>
+
+    <div class="flow" id="uf-8">
+      <div class="flow-h"><span class="id">UF-8</span><h3>A student joins</h3><span class="meta"><b>Who:</b> student · <b>Source:</b> §5.4, §3.2, §6.1</span></div>
+      <p class="small">Preconditions stated elsewhere: the student is enrolled in the class (§3.2) and has authorized focus lock (§6.1).</p>
+      <ol class="steps">
+        <li>The class view shows a QR code and a short code. The QR rotates every 30 seconds.</li>
+        <li>The student scans it.</li>
+        <li>The student is authenticated by their school-email session.</li>
+        <li>The student joins and is marked present, with a timestamp. A late join is timestamped as late.</li>
+      </ol>
+      <p class="small">Attendance here is TeacherAid's own. Official attendance stays in e-Дневник (§8.1).</p>
+    </div>
+
+    <div class="flow" id="uf-9">
+      <div class="flow-h"><span class="id">UF-9</span><h3>The opener — prediction (the default)</h3><span class="meta"><b>Who:</b> teacher and students · <b>Source:</b> §5.5</span></div>
+      <ol class="steps">
+        <li>A "What will happen if…?" question with 3–4 options appears.</li>
+        <li>Students vote.</li>
+        <li>Students type one line of reasoning.</li>
+        <li>Live bars show on the class view.</li>
+        <li>The reveal.</li>
+      </ol>
+      <p>Points for being right; points for giving a reason, right or wrong. Reasons are shown to the class without names; the teacher's console shows names.</p>
+    </div>
+
+    <div class="flow" id="uf-10">
+      <div class="flow-h"><span class="id">UF-10</span><h3>The opener — debate</h3><span class="meta"><b>Who:</b> teacher and students · <b>Source:</b> §5.5</span></div>
+      <ol class="steps">
+        <li>A claim is shown.</li>
+        <li>Students pick a side and give one reason.</li>
+        <li>The teacher reads two reasons aloud and lets the class argue.</li>
+      </ol>
+    </div>
+
+    <div class="flow" id="uf-11">
+      <div class="flow-h"><span class="id">UF-11</span><h3>Firing a pop-up question</h3><span class="meta"><b>Who:</b> teacher · <b>Source:</b> §5.6</span></div>
+      <ol class="steps">
+        <li>The teacher taps once on the console.</li>
+        <li>The question lands on every phone with its timer running.</li>
+      </ol>
+      <p>Pop-ups are teacher-triggered, never scheduled — "unpredictability is the point". The teacher can also fire an ad-hoc question ("quick: yes or no?") without preparation. If several minutes pass with no question fired, the console shows a quiet suggestion — not a modal, not a sound.</p>
+    </div>
+
+    <div class="flow" id="uf-12">
+      <div class="flow-h"><span class="id">UF-12</span><h3>Skipping a bad question</h3><span class="meta"><b>Who:</b> teacher · <b>Source:</b> §5.8</span></div>
+      <ol class="steps">
+        <li>The teacher skips the question during the session.</li>
+        <li>It is removed from the session and nobody is scored on it.</li>
+        <li>The class view says so plainly, so students know it does not count.</li>
+      </ol>
+      <p>There is no live text editing. The teacher fixes the lesson afterwards, in the copy they reuse.</p>
+    </div>
+
+    <div class="flow" id="uf-13">
+      <div class="flow-h"><span class="id">UF-13</span><h3>A student asks a question the class will not see attributed</h3><span class="meta"><b>Who:</b> student, then teacher · <b>Source:</b> §5.7</span></div>
+      <ol class="steps">
+        <li>At any time during the lesson, the student sends a question. The limit is 3 per student per lesson by default.</li>
+        <li>It arrives in the inbox on the teacher's console, with the sender's name. The inbox lives on the console only.</li>
+        <li>The teacher answers it in the review block (<a href="#uf-14">UF-14</a>).</li>
+      </ol>
+      <p>No classmate ever sees who sent it.</p>
+    </div>
+
+    <div class="flow" id="uf-14">
+      <div class="flow-h"><span class="id">UF-14</span><h3>The review block</h3><span class="meta"><b>Who:</b> teacher · <b>Source:</b> §8.2</span></div>
+      <p>The class view shows the most-missed questions, ranked worst first, and the anonymous questions for the teacher to answer aloud. The teacher supplies the explanation — no AI re-explanation, no generated remedial content; "nothing unreviewed reaches students".</p>
+    </div>
+
+    <div class="flow" id="uf-15">
+      <div class="flow-h"><span class="id">UF-15</span><h3>Ending the session</h3><span class="meta"><b>Who:</b> teacher · <b>Source:</b> §5.10, §8.1</span></div>
+      <ol class="steps">
+        <li>The teacher presses End. There is no auto-close.</li>
+        <li>Points settle.</li>
+        <li>Attendance is written.</li>
+        <li>The absentee list appears: only the names of students who were absent, formatted for copying into e-Дневник.</li>
+        <li>The lesson is archived.</li>
+      </ol>
+      <p>The teacher retypes the absent names into e-Дневник — "four names instead of checking thirty". TeacherAid does not write to e-Дневник and does not replace it.</p>
+    </div>
+
+    <h2 id="uf-after">After the lesson</h2>
+
+    <div class="flow" id="uf-16">
+      <div class="flow-h"><span class="id">UF-16</span><h3>Sending a practice set</h3><span class="meta"><b>Who:</b> teacher, then students · <b>Source:</b> §8.3</span></div>
+      <ol class="steps">
+        <li>After a lesson, the teacher sends an optional practice set to the class.</li>
+        <li>The set is auto-assembled from that session's own missed questions — no new generation, no cost, no unreviewed content.</li>
+        <li>Students do it voluntarily; it scores points.</li>
+        <li>The teacher sees who completed it and how they scored.</li>
+      </ol>
+    </div>
+
+    <h2 id="uf-onboard">Onboarding</h2>
+
+    <div class="flow" id="uf-17">
+      <div class="flow-h"><span class="id">UF-17</span><h3>The class setup lesson</h3><span class="meta"><b>Who:</b> a whole class, with the teacher present · <b>Source:</b> §10.1</span></div>
+      <p>Because focus lock is mandatory and needs a native app plus an operating-system permission, each class spends one period on setup before its first real lesson:</p>
+      <ol class="steps">
+        <li>Install the app.</li>
+        <li>Sign in with the school email.</li>
+        <li>Authorize the lock — with the teacher present "to fix the five phones that resist".</li>
+      </ol>
+      <p class="small">Forty-five minutes given up once per class. The specification marks this as an unverified assumption (C, §14).</p>
+    </div>
+
+    <div class="flow" id="uf-18">
+      <div class="flow-h"><span class="id">UF-18</span><h3>A teacher's first run — the guided first lesson</h3><span class="meta"><b>Who:</b> teacher · <b>Source:</b> §10.2</span></div>
+      <p>Not a video. The app walks the teacher through building one real lesson end to end:</p>
+      <ol class="steps">
+        <li>Pick the unit from the e-учебник.</li>
+        <li>Review the questions.</li>
+        <li>Run it.</li>
+      </ol>
+      <p>They finish holding a lesson ready for tomorrow. The walkthrough must cover opening the class view as a second window — "the step most likely to go wrong in front of a class".</p>
+    </div>
+
+    <h2 id="uf-admin">Administration and reporting</h2>
+
+    <div class="flow" id="uf-19">
+      <div class="flow-h"><span class="id">UF-19</span><h3>The monthly headmaster report</h3><span class="meta"><b>Who:</b> automatic · <b>Source:</b> §9.3</span></div>
+      <ol class="steps">
+        <li>Monthly and automatically, a PDF is sent to the headmaster by email. No login, nothing to configure.</li>
+        <li>Page one is written to be forwarded without editing; page two is for the headmaster only (contents in <a href="#fr-59">FR-59</a>).</li>
+        <li>The email carries a permanent private link to every past report — one unguessable URL, no account.</li>
+      </ol>
+      <p class="small">The school admin can resend the report (§3.3).</p>
+    </div>
+
+    <div class="flow" id="uf-20">
+      <div class="flow-h"><span class="id">UF-20</span><h3>Roster changes</h3><span class="meta"><b>Who:</b> school admin · <b>Source:</b> §12</span></div>
+      <ul>
+        <li><b>Add a student mid-year.</b> They start at zero points; the class leaderboard must show they joined partway through.</li>
+        <li><b>Remove a student.</b> Their data is retained under the retention rule (§11.6) until deletion is requested.</li>
+        <li><b>Move a student between classes.</b> Their history moves with them.</li>
+      </ul>
+    </div>
+
+    <div class="flow" id="uf-21">
+      <div class="flow-h"><span class="id">UF-21</span><h3>TeacherAid staff accessing a school's data</h3><span class="meta"><b>Who:</b> TeacherAid support · <b>Source:</b> §11.4</span></div>
+      <ol class="steps">
+        <li>A support incident occurs. There is no standing access.</li>
+        <li>Access is granted for that incident, time-limited.</li>
+        <li>It expires automatically.</li>
+        <li>The access is written to an audit log, and the school admin can see every occurrence.</li>
+      </ol>
+    </div>
+
+    <div class="flow" id="uf-22">
+      <div class="flow-h"><span class="id">UF-22</span><h3>A request to export or delete a student's data</h3><span class="meta"><b>Who:</b> the school, then TeacherAid support · <b>Source:</b> §11.5</span></div>
+      <ol class="steps">
+        <li>The school makes a written request.</li>
+        <li>Support manually exports everything held on that one student, or deletes it.</li>
+      </ol>
+      <p class="small">No self-serve export or deletion exists for the admin in v1.</p>
+    </div>
+
+    <h2 id="uf-empty">Flows the specification does not describe</h2>
+    <div class="emptyset">
+      <div class="empty" id="e-12"><span class="tag"><span class="id">E-12</span>Empty case · inviting a teacher</span><p>The admin "invites and removes teachers" (§3.3). How an invitation is sent, accepted, and turned into a first sign-in is not described.</p></div>
+      <div class="empty" id="e-13"><span class="tag"><span class="id">E-13</span>Empty case · password reset</span><p>Required to be built "properly" and to be "fast on a phone" (§3.1). No steps are given.</p></div>
+      <div class="empty" id="e-14"><span class="tag"><span class="id">E-14</span>Empty case · creating the school admin</span><p>"Created by TeacherAid at onboarding" (§3.3). What onboarding a school consists of is not described.</p></div>
+      <div class="empty" id="e-15"><span class="tag"><span class="id">E-15</span>Empty case · student first sign-in and enrolment</span><p>Beyond "sign in with the school email" in the setup lesson (§10.1) and rosters being admin-managed (§3.3), nothing describes how a student account comes to exist or how a student ends up enrolled in a class.</p></div>
+      <div class="empty" id="e-16"><span class="tag"><span class="id">E-16</span>Empty case · authorizing the focus lock on the phone</span><p>The operating-system mechanisms are named (§6.2). The screens and steps a student goes through to grant the permission are not.</p></div>
+      <div class="empty" id="e-17"><span class="tag"><span class="id">E-17</span>Empty case · what the student sees</span><p>The specification describes the class view and the console in detail (§5.2) but not the student's phone screens at each state — the lobby, between questions, when a timer runs out, during review, after End.</p></div>
+      <div class="empty" id="e-18"><span class="tag"><span class="id">E-18</span>Empty case · adjusting the distraction list</span><p>The admin can adjust it "once, for the whole school" (§6.3). No screen or steps are described.</p></div>
+      <div class="empty" id="e-19"><span class="tag"><span class="id">E-19</span>Empty case · the focus-flag lifecycle</span><p>Focus flags appear on the dashboard "with the reason where there is one" (§9.1) and the lock "knows only that TeacherAid is not in the foreground" (§6.2). When a flag is raised, what the student sees, and whether it can clear are not described.</p></div>
+      <div class="empty" id="e-20"><span class="tag"><span class="id">E-20</span>Empty case · earning a badge</span><p>Badges are named achievements with "design work still to do" (§13.2). No award flow exists yet.</p></div>
+      <div class="empty" id="e-21"><span class="tag"><span class="id">E-21</span>Empty case · the teacher's list of prepared lessons</span><p>"Today" is defined as "what the teacher has prepared and not yet run" (§5.1). No screen or flow for choosing which prepared lesson to run is described.</p></div>
+      <div class="empty" id="e-22"><span class="tag"><span class="id">E-22</span>Empty case · during and after a failed generation</span><p>What the teacher sees while generation runs, and what happens if it fails or returns something unusable, are not described (§4.1).</p></div>
+      <div class="empty" id="e-23"><span class="tag"><span class="id">E-23</span>Empty case · how students receive a practice set</span><p>How students are told a practice set exists, and whether it has a deadline, are not stated (§8.3). A push token is listed among stored data (§11.1) but no notification is described.</p></div>
+      <div class="empty" id="e-24"><span class="tag"><span class="id">E-24</span>Empty case · joining by code</span><p>The class view shows "a QR and a short code" (§5.4). Only scanning is described; whether the code can be typed instead is not.</p></div>
+    </div>
+
+  </div>
+</div>
+</section>
+<!-- ============ 4. FUNCTIONAL REQUIREMENTS ============ -->
+<section class="slide" id="requirements" data-title="4 · Functional requirements" data-short="Requirements">
+<div class="inner">
+  <div class="head">
+    <span class="eyebrow">Category 4 of 7</span>
+    <h1>Functional requirements</h1>
+    <p class="def">What the system does and has, area by area — the features a developer builds and a school can expect to find. Each item is one requirement, numbered so it can be referenced.</p>
+    <div class="stat" data-stat></div>
+  </div>
+  <nav class="subnav" aria-label="On this slide"></nav>
+  <div class="content">
+
+    <h2 id="fr-roles">Accounts and roles</h2>
+    <div class="items">
+      <div class="item" id="fr-1"><span class="id">FR-1</span><div><p>A teacher signs in with an email address and a password. No magic links, no single sign-on.<span class="ref">§3.1</span></p></div></div>
+      <div class="item" id="fr-2"><span class="id">FR-2</span><div><p>Password reset exists, is built properly, and is fast on a phone.<span class="ref">§3.1</span></p></div></div>
+      <div class="item" id="fr-3"><span class="id">FR-3</span><div><p>A teacher can: create and edit lessons; run sessions; see their own classes only; view their dashboard; send practice sets; read the anonymous inbox for their own sessions.<span class="ref">§3.1</span></p></div></div>
+      <div class="item" id="fr-4"><span class="id">FR-4</span><div><p>A teacher cannot: see another teacher's classes, students or results; see anything school-wide; change rosters.<span class="ref">§3.1</span></p></div></div>
+      <div class="item" id="fr-5"><span class="id">FR-5</span><div><p>A student signs in with the school-issued email account. That account is the student's identity for attendance, points, focus flags and per-topic results.<span class="ref">§3.2</span></p></div></div>
+      <div class="item" id="fr-6"><span class="id">FR-6</span><div><p>One active sign-in per student account at a time. A second device signing in ends the first.<span class="ref">§3.2</span></p></div></div>
+      <div class="item" id="fr-7"><span class="id">FR-7</span><div><p>A student can: join a session they are enrolled in; answer; send an anonymous question; see their own points, rank, badges, answer history and practice sets.<span class="ref">§3.2</span></p></div></div>
+      <div class="item" id="fr-8"><span class="id">FR-8</span><div><p>A student cannot: see another student's answers, reasons or results; see who sent an anonymous question; see the teacher dashboard.<span class="ref">§3.2</span></p></div></div>
+      <div class="item" id="fr-9"><span class="id">FR-9</span><div><p>The school admin (the school secretary or IT person) is a real role with its own screens, created by TeacherAid at onboarding.<span class="ref">§3.3</span></p></div></div>
+      <div class="item" id="fr-10"><span class="id">FR-10</span><div><p>The school admin can: create and edit classes and rosters; invite and remove teachers; move a student between classes; add or remove a student mid-year; adjust the distraction list; see the school usage overview; resend the headmaster report; see the staff-access log.<span class="ref">§3.3</span></p></div></div>
+      <div class="item" id="fr-11"><span class="id">FR-11</span><div><p>The school admin cannot see individual student answers, reasons, anonymous questions or per-topic results.<span class="ref">§3.3</span></p></div></div>
+      <div class="item" id="fr-12"><span class="id">FR-12</span><div><p>The headmaster has no account, nothing to configure and nothing to learn; they receive the monthly report by email.<span class="ref">§3.4</span></p></div></div>
+    </div>
+
+    <h2 id="fr-lesson">Lessons</h2>
+    <div class="items">
+      <div class="item" id="fr-13"><span class="id">FR-13</span><div><p>A lesson is a reusable object: authored once, run many times.<span class="ref">§4</span></p></div></div>
+      <div class="item" id="fr-14"><span class="id">FR-14</span><div><p>The primary input for a lesson is a unit from the e-учебник. The teacher picks subject, year and unit from pre-loaded contents ("two taps") and may add one sentence of emphasis.<span class="ref">§4.1</span></p></div></div>
+      <div class="item" id="fr-15"><span class="id">FR-15</span><div><p>Generation returns: the opener; 5–8 pop-up questions with answers and explanations; a suggested timer per question; the review summary. In Macedonian. All editable.<span class="ref">§4.1</span></p></div></div>
+      <div class="item" id="fr-16"><span class="id">FR-16</span><div><p>TeacherAid pre-loads and chunks the e-учебници for the three pilot subjects, per unit. Teachers do not upload them.<span class="ref">§4.1</span></p></div></div>
+      <div class="item" id="fr-17"><span class="id">FR-17</span><div><p>A fallback input exists — "type three sentences" — for a subject with no loaded book, or for something off-book.<span class="ref">§4.1</span></p></div></div>
+      <div class="item" id="fr-18"><span class="id">FR-18</span><div><p>Four question types, all scored automatically:<span class="ref">§4.2</span></p>
+        <div class="tablewrap"><table>
+          <thead><tr><th>Type</th><th>What the student does</th><th>How it is scored</th></tr></thead>
+          <tbody>
+            <tr><td>Multiple choice</td><td>Taps one of 2–4 options</td><td>Correct, plus speed bonus</td></tr>
+            <tr><td>One-line reason</td><td>Types a short free-text reason after an opener vote</td><td>Points for writing one, right or wrong</td></tr>
+            <tr><td>Numeric</td><td>Types a number</td><td>Correct within a tolerance the author sets, e.g. 2601 ± 10. Plus speed bonus</td></tr>
+            <tr><td>True / false</td><td>Two taps</td><td>Correct, plus speed bonus</td></tr>
+          </tbody>
+        </table></div>
+        <p class="small">Numeric and true/false exist because physics and electronics questions "cannot honestly be expressed as four options". The one-line reason is "the pedagogically load-bearing part, not decoration".</p>
+      </div></div>
+      <div class="item" id="fr-19"><span class="id">FR-19</span><div><p>Question types not in v1: ordering, matching, tap-the-map, drawing.<span class="lab neutral">Not in v1</span><span class="ref">§4.2</span></p></div></div>
+      <div class="item" id="fr-20"><span class="id">FR-20</span><div><p>Images can appear in the question, in the options and in the reveal. Needed for history.<span class="ref">§4.3</span></p></div></div>
+      <div class="item" id="fr-21"><span class="id">FR-21</span><div><p>Formulas are rendered — mathematical and chemical notation. Needed for physics and electronics; "without it those teachers cannot write their questions at all".<span class="ref">§4.3</span></p></div></div>
+      <div class="item" id="fr-22"><span class="id">FR-22</span><div><p>Images have a low-bandwidth path: served compressed and sized for a phone, and a question's timer never waits for an image that has not loaded.<span class="ref">§4.3</span></p></div></div>
+      <div class="item" id="fr-23"><span class="id">FR-23</span><div><p>The generator suggests a duration per question based on what it wrote — a recall question is not a calculation. The teacher can override any of them while reviewing, before the lesson runs.<span class="ref">§4.4</span></p>
+        <p>Proposed starting defaults:<span class="lab">Proposed · needs sign-off</span></p>
+        <div class="tablewrap"><table class="narrow">
+          <thead><tr><th>Question shape</th><th class="num">Proposed</th></tr></thead>
+          <tbody>
+            <tr><td>Recall, true/false</td><td class="num">15 s</td></tr>
+            <tr><td>Multiple choice, reasoning</td><td class="num">25 s</td></tr>
+            <tr><td>Numeric, calculation</td><td class="num">45 s</td></tr>
+            <tr><td>Opener vote</td><td class="num">30 s, then 45 s for the reason</td></tr>
+          </tbody>
+        </table></div>
+      </div></div>
+      <div class="item" id="fr-24"><span class="id">FR-24</span><div><p>One lesson can be run as many sessions. Each session has its own attendance, answers, points and results. Editing the lesson between runs affects later runs, not the record of earlier ones.<span class="ref">§4.5</span></p></div></div>
+      <div class="item" id="fr-25"><span class="id">FR-25</span><div><p>Refinements are a fixed row of one-tap actions on the generated lesson — Easier, Harder, More questions, Make the opener a debate (or a prediction), Shorter timers. No free-text chat.<span class="ref">§4.6</span></p></div></div>
+      <div class="item" id="fr-26"><span class="id">FR-26</span><div><p>The school library: every lesson a teacher saves is visible to other teachers in the same school, who can copy it into their own account and edit their copy. The original is never modified by a copy. No national library, no cross-school sharing, no public lessons.<span class="ref">§4.7</span></p></div></div>
+    </div>
+
+    <h2 id="fr-session">The live session</h2>
+    <div class="items">
+      <div class="item" id="fr-27"><span class="id">FR-27</span><div><p>There is no timetable. The app has no concept of periods, schedules or a school timetable; "today" is what the teacher has prepared and not yet run.<span class="ref">§5.1</span></p></div></div>
+      <div class="item" id="fr-28"><span class="id">FR-28</span><div><p>Two browser windows:<span class="ref">§5.2</span></p>
+        <div class="tablewrap"><table>
+          <thead><tr><th>Window</th><th>Where</th><th>Shows</th></tr></thead>
+          <tbody>
+            <tr><td>Class view</td><td>Projected</td><td>QR and join code, joined counter, the question, live bars, the reveal, the leaderboard</td></tr>
+            <tr><td>Console</td><td>Teacher's laptop screen</td><td>Everything above in miniature, plus the anonymous inbox with sender names, per-student answer state, the pop-up trigger, the skip control</td></tr>
+          </tbody>
+        </table></div>
+        <p class="small">The console must never be projected: named student data and the anonymous inbox live only there.</p>
+      </div></div>
+      <div class="item" id="fr-29"><span class="id">FR-29</span><div><p>The class view opens as a separate window with one click, not by dragging.<span class="ref">§5.2</span></p></div></div>
+      <div class="item" id="fr-30"><span class="id">FR-30</span><div><p>Session states are lobby, opener, teaching, review, ended, in that order. The teacher advances the state. The server is the timer authority for every countdown; clients render it.<span class="ref">§5.3</span></p></div></div>
+      <div class="item" id="fr-31"><span class="id">FR-31</span><div><p>The class view shows a QR code and a short code. The QR rotates every 30 seconds.<span class="ref">§5.4</span></p></div></div>
+      <div class="item" id="fr-32"><span class="id">FR-32</span><div><p>Joining marks the student present with a timestamp. Late joins are timestamped as late.<span class="ref">§5.4</span></p></div></div>
+      <div class="item" id="fr-33"><span class="id">FR-33</span><div><p>The opener has two modes, prediction (default) and debate, as described in <a href="#uf-9">UF-9</a> and <a href="#uf-10">UF-10</a>.<span class="ref">§5.5</span></p></div></div>
+      <div class="item" id="fr-34"><span class="id">FR-34</span><div><p>Live bars appear on the class view during the opener vote, followed by the reveal. Reasons are shown to the class without names; the console shows names.<span class="ref">§5.5</span></p></div></div>
+      <div class="item" id="fr-35"><span class="id">FR-35</span><div><p>A pop-up question is fired with one tap and lands on every phone with its timer running.<span class="ref">§5.6</span></p></div></div>
+      <div class="item" id="fr-36"><span class="id">FR-36</span><div><p>The nudge: if several minutes pass with no question fired, the console shows a quiet suggestion — not a modal, not a sound.<span class="ref">§5.6</span></p></div></div>
+      <div class="item" id="fr-37"><span class="id">FR-37</span><div><p>The teacher can fire an ad-hoc question ("quick: yes or no?") without preparation.<span class="ref">§5.6</span></p></div></div>
+      <div class="item" id="fr-38"><span class="id">FR-38</span><div><p>Anonymous questions: a student can send one at any time during the lesson; the teacher sees who sent it; no classmate ever does; the default limit is 3 per student per lesson; the teacher answers them in the review block; the inbox lives on the console only.<span class="ref">§5.7</span></p></div></div>
+      <div class="item" id="fr-39"><span class="id">FR-39</span><div><p>Skip: the teacher can remove a question from the running session; nobody is scored on it; the class view says so plainly.<span class="ref">§5.8</span></p></div></div>
+      <div class="item" id="fr-40"><span class="id">FR-40</span><div><p>There is no live text editing of a question during a session.<span class="ref">§5.8</span></p></div></div>
+      <div class="item" id="fr-41"><span class="id">FR-41</span><div><p>Phones queue answers locally and sync on reconnect. A student who answers during a dropout is still credited, with their original answer time.<span class="ref">§5.9</span></p></div></div>
+      <div class="item" id="fr-42"><span class="id">FR-42</span><div><p>The console distinguishes "offline" from "has not answered".<span class="ref">§5.9</span></p></div></div>
+      <div class="item" id="fr-43"><span class="id">FR-43</span><div><p>The teacher's lesson is cached on their device. If everything fails, the teacher still has the questions and can run them out loud; points pause.<span class="ref">§5.9</span></p></div></div>
+      <div class="item" id="fr-44"><span class="id">FR-44</span><div><p>A session ends when the teacher presses End; there is no auto-close. On End: points settle, attendance is written, the absentee list appears, the lesson is archived.<span class="ref">§5.10</span></p></div></div>
+      <div class="item" id="fr-45"><span class="id">FR-45</span><div><p>A visible open-session indicator exists, and ending an already-open session from anywhere in the app is a one-tap action.<span class="ref">§5.10</span></p></div></div>
+    </div>
+
+    <h2 id="fr-focus">Focus lock</h2>
+    <div class="items">
+      <div class="item" id="fr-46"><span class="id">FR-46</span><div><p>A student who has not authorized focus lock cannot join a session.<span class="ref">§6.1</span></p></div></div>
+      <div class="item" id="fr-47"><span class="id">FR-47</span><div><p>The student app is native on iOS and Android, because the lock needs operating-system abilities a web page cannot reach.<span class="ref">§6.2</span></p>
+        <p class="dev"><b>iOS</b> — Screen Time: <b>FamilyControls</b> for authorization, <b>ManagedSettings</b> to shield apps, <b>DeviceActivity</b> for the time window. Individual authorization from the device owner, no parent pairing. Requires Apple's Family Controls entitlement, which takes weeks to obtain.<br><b>Android</b> — <b>PACKAGE_USAGE_STATS</b> to detect a foreground distraction app plus a system overlay, or an <b>AccessibilityService</b>. Declare the focus/productivity use case for Play review.</p>
+      </div></div>
+      <div class="item" id="fr-48"><span class="id">FR-48</span><div><p>The lock never reads what the student does in other apps. It knows only that TeacherAid is not in the foreground.<span class="ref">§6.2</span></p></div></div>
+      <div class="item" id="fr-49"><span class="id">FR-49</span><div><p>The distraction list ships with a default — social, games, messaging. The school admin can adjust it, once, for the whole school.<span class="ref">§6.3</span></p></div></div>
+      <div class="item" id="fr-50"><span class="id">FR-50</span><div><p>A student who cannot or will not authorize the lock is marked present, earns no points, and the reason is shown on the dashboard. Never marked absent.<span class="ref">§6.4</span></p></div></div>
+    </div>
+
+    <h2 id="fr-nophone">Students without a working phone</h2>
+    <div class="items">
+      <div class="item" id="fr-51"><span class="id">FR-51</span><div><p>For a student with no phone, a dead battery, no data, or no focus-lock authorization: the teacher marks them present in one tap; no points for the lesson; the dashboard shows the reason, so a zero is not read as disengagement. One code path serving four causes, expected to be used in most lessons.<span class="ref">§7.1</span></p></div></div>
+      <div class="item" id="fr-52"><span class="id">FR-52</span><div><p>No pairing with a classmate's device, and no teacher entering answers on a student's behalf.<span class="lab neutral">Not in v1</span><span class="ref">§7.2</span></p></div></div>
+    </div>
+
+    <h2 id="fr-after">After the lesson</h2>
+    <div class="items">
+      <div class="item" id="fr-53"><span class="id">FR-53</span><div><p>On End the teacher sees only the names of students who were absent, formatted for copying into e-Дневник. TeacherAid does not write to e-Дневник and does not replace it.<span class="ref">§8.1</span></p></div></div>
+      <div class="item" id="fr-54"><span class="id">FR-54</span><div><p>The review block on the class view shows the most-missed questions ranked worst first, and the anonymous questions for the teacher to answer aloud. The teacher supplies the explanation; there is no AI re-explanation and no generated remedial content.<span class="ref">§8.2</span></p></div></div>
+      <div class="item" id="fr-55"><span class="id">FR-55</span><div><p>Practice sets: after a lesson the teacher can send an optional set to the class, auto-assembled from that session's own missed questions with no new generation. Doing it is voluntary and scores points. The teacher sees who completed it and how they scored.<span class="ref">§8.3</span></p></div></div>
+      <div class="item" id="fr-56"><span class="id">FR-56</span><div><p>Per student, TeacherAid stores attendance, points, answers, correctness, response time, and per-topic correctness over time. The teacher can see which student is repeatedly wrong on a specific topic.<span class="ref">§8.4</span></p></div></div>
+    </div>
+
+    <h2 id="fr-dash">Dashboards and the report</h2>
+    <div class="items">
+      <div class="item" id="fr-57"><span class="id">FR-57</span><div><p>The teacher dashboard is one screen per class, with nothing to configure, showing:<span class="ref">§9.1</span></p>
+        <ul>
+          <li>Attendance per lesson and per student</li>
+          <li>Points and participation over time</li>
+          <li>Focus flags, with the reason where there is one</li>
+          <li>Per-topic correctness, for the class and per student</li>
+          <li>The anonymous inbox, with sender names</li>
+          <li>Practice completion and scores</li>
+          <li>Lesson history, every lesson reusable</li>
+        </ul>
+      </div></div>
+      <div class="item" id="fr-58"><span class="id">FR-58</span><div><p>The school admin overview combines setup (classes, rosters, staff, distraction list) with a usage overview: which teachers are running lessons, how often, and which have not started. It shows no student answers, reasons, anonymous questions or per-topic results.<span class="ref">§9.2</span></p></div></div>
+      <div class="item" id="fr-59"><span class="id">FR-59</span><div><p>The headmaster report: monthly, automatic, by email as a PDF.<span class="ref">§9.3</span></p>
+        <p><b>Page one</b> — written to be forwarded to parents, the municipality or the local press without editing: lessons run; teachers active; average attendance; average engagement (answers per pop-up); top classes; top teachers; a two-line plain-language summary; the month-on-month trend.</p>
+        <p><b>Page two</b> — headmaster only, not for forwarding: a comparison against other schools using TeacherAid.</p>
+        <p>The email carries a permanent private link to every past report — one unguessable URL, no account — so "a headmaster who needs last month's figures for the municipality does not have to ask anyone".</p>
+      </div></div>
+      <div class="item" id="fr-60"><span class="id">FR-60</span><div><p>The school admin can resend the headmaster report.<span class="ref">§3.3</span></p></div></div>
+    </div>
+
+    <h2 id="fr-onboard">Onboarding, support and accessibility</h2>
+    <div class="items">
+      <div class="item" id="fr-61"><span class="id">FR-61</span><div><p>A guided first lesson for teachers — not a video. The app walks the teacher through building one real lesson end to end (pick the unit, review the questions, run it), including opening the class view as a second window.<span class="ref">§10.2</span></p></div></div>
+      <div class="item" id="fr-62"><span class="id">FR-62</span><div><p>In-app help, searchable, covering the common failures.<span class="ref">§10.3</span></p></div></div>
+      <div class="item" id="fr-63"><span class="id">FR-63</span><div><p>A direct channel to a human, one tap, for when it is urgent — "a help article is no use to a teacher standing in front of thirty students at 08:05".<span class="ref">§10.3</span></p></div></div>
+      <div class="item" id="fr-64"><span class="id">FR-64</span><div><p>Accessibility baseline: adequate contrast; legible at the back of the room and on a cheap screen; never colour alone to signal right or wrong. No per-student extra time, no committed screen-reader support, no text-scaling guarantee — recorded as a known limitation.<span class="ref">§10.4</span></p></div></div>
+    </div>
+
+    <h2 id="fr-data">Data, privacy and security</h2>
+    <div class="items">
+      <div class="item" id="fr-65"><span class="id">FR-65</span><div><p>What is stored, and who can see it:<span class="ref">§11.1</span></p>
+        <div class="tablewrap"><table>
+          <thead><tr><th>Data</th><th>Who sees it</th></tr></thead>
+          <tbody>
+            <tr><td>Student name, class, school email</td><td>Teacher, admin, the student</td></tr>
+            <tr><td>Attendance per session with timestamp</td><td>Teacher; aggregated for the headmaster</td></tr>
+            <tr><td>Answers, correctness, response time, points</td><td>Teacher; the student sees their own</td></tr>
+            <tr><td>Per-topic correctness over time</td><td>Teacher; the student sees their own</td></tr>
+            <tr><td>One-line reasons</td><td>Teacher with names; class without names</td></tr>
+            <tr><td>Anonymous questions</td><td>Teacher, with the sender's name</td></tr>
+            <tr><td>Focus events and authorization state</td><td>Teacher</td></tr>
+            <tr><td>Practice completion and scores</td><td>Teacher; the student sees their own</td></tr>
+            <tr><td>Badges</td><td>Teacher, the student, classmates</td></tr>
+            <tr><td>Lessons and generated content</td><td>The authoring teacher; other teachers in the school via the library</td></tr>
+          </tbody>
+        </table></div>
+      </div></div>
+      <div class="item" id="fr-66"><span class="id">FR-66</span><div><p>Not stored: grades; student contact details beyond the school email; location; device identifiers beyond a push token; anything about other apps on the phone.<span class="ref">§11.1</span></p></div></div>
+      <div class="item" id="fr-67"><span class="id">FR-67</span><div><p>TeacherAid staff have no standing access to any school's data. Access is granted per support incident, is time-limited, expires automatically, is written to an audit log, and the school admin can see every occurrence.<span class="ref">§11.4</span></p></div></div>
+      <div class="item" id="fr-68"><span class="id">FR-68</span><div><p>Requests to export everything held on one student, or to delete it, are handled manually by support on the school's written request. No self-serve export or deletion.<span class="ref">§11.5</span></p></div></div>
+      <div class="item" id="fr-69"><span class="id">FR-69</span><div><p>Retention: session data is kept for the current school year plus one, then aggregated and deleted. Monthly reports are kept in aggregate, without names. A student who leaves is deleted within 30 days on the school's request.<span class="ref">§11.6</span></p></div></div>
+      <div class="item" id="fr-70"><span class="id">FR-70</span><div><p>EU hosting. Encryption in transit and at rest. Role-based access as in the roles above. Student names are never sent to the AI provider — generation uses the unit and the teacher's sentence, never the roster.<span class="ref">§11.7</span></p></div></div>
+    </div>
+
+    <h2 id="fr-roster">Roster lifecycle</h2>
+    <div class="items">
+      <div class="item" id="fr-71"><span class="id">FR-71</span><div><p>The school admin can add a student mid-year (they start at zero points and the class leaderboard shows they joined partway through), remove a student (data retained per FR-69 until deletion is requested), and move a student between classes (their history moves with them).<span class="ref">§12</span></p></div></div>
+      <div class="item" id="fr-72"><span class="id">FR-72</span><div><p>Reassigning a class to a different teacher, and a second teacher on a class, are not supported.<span class="lab neutral">Not in v1</span><span class="ref">§12</span></p></div></div>
+    </div>
+
+    <h2 id="fr-points">Points, badges and leaderboards</h2>
+    <div class="items">
+      <div class="item" id="fr-73"><span class="id">FR-73</span><div><p>Scoring values are fixed and identical in every school. One exception: the teacher can switch the speed bonus off for a class.<span class="ref">§13.1</span></p></div></div>
+      <div class="item" id="fr-74"><span class="id">FR-74</span><div><p>Proposed starting values:<span class="lab">Proposed · needs sign-off</span><span class="ref">§13.1</span></p>
+        <div class="tablewrap"><table class="narrow">
+          <thead><tr><th>Event</th><th class="num">Proposed points</th></tr></thead>
+          <tbody>
+            <tr><td>Opener vote, correct</td><td class="num">10</td></tr>
+            <tr><td>Opener vote, incorrect</td><td class="num">0</td></tr>
+            <tr><td>Opener reason written</td><td class="num">8</td></tr>
+            <tr><td>Pop-up correct</td><td class="num">10</td></tr>
+            <tr><td>Speed bonus</td><td class="num">up to 5, scaled by time remaining</td></tr>
+            <tr><td>Practice question correct</td><td class="num">5</td></tr>
+          </tbody>
+        </table></div>
+      </div></div>
+      <div class="item" id="fr-75"><span class="id">FR-75</span><div><p>Badges are named achievements for things points cannot reward — reasoning on a wrong answer, a comeback, asking a good question. "Design work still to do. Empty badges are worse than none."<span class="ref">§13.2</span></p></div></div>
+      <div class="item" id="fr-76"><span class="id">FR-76</span><div><p>No streaks.<span class="lab neutral">Not in v1</span><span class="ref">§13.2</span></p></div></div>
+      <div class="item" id="fr-77"><span class="id">FR-77</span><div><p>Two leaderboards: class (real names) and school (nicknames by default; the school may choose otherwise). Seasons run per semester. No national leaderboard.<span class="ref">§11.3, §13.3</span></p></div></div>
+    </div>
+
+    <h2 id="fr-empty">Empty cases in this category</h2>
+    <div class="emptyset">
+      <div class="empty" id="e-25"><span class="tag"><span class="id">E-25</span>Empty case · platforms for teacher and admin</span><p>The teacher runs sessions "from a laptop" in browser windows (§5.2). Whether lessons can be created on a phone, and what device or platform the admin's screens run on, are not stated.</p></div>
+      <div class="empty" id="e-26"><span class="tag"><span class="id">E-26</span>Empty case · notifications</span><p>A push token is among the stored data (§11.1), but no notification of any kind is specified anywhere.</p></div>
+      <div class="empty" id="e-27"><span class="tag"><span class="id">E-27</span>Empty case · the AI provider</span><p>Generation goes to "the AI provider" (§11.7). Which provider or model, and what is sent beyond the unit and the teacher's sentence, are not stated.</p></div>
+      <div class="empty" id="e-28"><span class="tag"><span class="id">E-28</span>Empty case · the focus-flag rule</span><p>What counts as leaving the app, for how long, and how it becomes a flag on the dashboard is not defined (§6.2, §9.1).</p></div>
+      <div class="empty" id="e-29"><span class="tag"><span class="id">E-29</span>Empty case · what "late" means</span><p>Late joins are timestamped as late (§5.4). No threshold or definition of late is given.</p></div>
+      <div class="empty" id="e-30"><span class="tag"><span class="id">E-30</span>Empty case · who can change the question limit</span><p>Three anonymous questions per student per lesson is called a "default" (§5.7). Who can change it, and to what, is not stated.</p></div>
+      <div class="empty" id="e-31"><span class="tag"><span class="id">E-31</span>Empty case · the speed bonus formula</span><p>"Up to 5, scaled by time remaining" is a proposal (§13.1). How the scaling works is not defined.</p></div>
+      <div class="empty" id="e-32"><span class="tag"><span class="id">E-32</span>Empty case · default numeric tolerance</span><p>The author sets a tolerance for numeric answers (§4.2). No default is given for when the author sets none.</p></div>
+      <div class="empty" id="e-33"><span class="tag"><span class="id">E-33</span>Empty case · limits of the offline queue</span><p>Answers queue locally and sync on reconnect (§5.9). How long they may queue, and what happens to answers that arrive after the session has ended, are not stated.</p></div>
+      <div class="empty" id="e-34"><span class="tag"><span class="id">E-34</span>Empty case · report delivery details</span><p>The report is monthly with "nothing to configure" (§9.3). The day it is sent, the language it is written in, and who supplies the headmaster's email address are not stated.</p></div>
+      <div class="empty" id="e-35"><span class="tag"><span class="id">E-35</span>Empty case · ad-hoc question types</span><p>An unprepared question can be fired (§5.6). Which of the four question types it can take is not stated; the only example is "yes or no".</p></div>
+      <div class="empty" id="e-36"><span class="tag"><span class="id">E-36</span>Empty case · nudge timing</span><p>The nudge appears after "several minutes" without a question (§5.6). The number is not given.</p></div>
+      <div class="empty" id="e-37"><span class="tag"><span class="id">E-37</span>Empty case · the student's own screens</span><p>A student can see their own points, rank, badges, answer history and practice sets (§3.2). No screen, layout or level of detail is described.</p></div>
+      <div class="empty" id="e-38"><span class="tag"><span class="id">E-38</span>Empty case · admin and the library</span><p>The library is visible to "other teachers in the same school" (§4.7). Whether the school admin can see it is not stated.</p></div>
+    </div>
+
+  </div>
+</div>
+</section>
+<!-- ============ 5. BUSINESS RULES ============ -->
+<section class="slide" id="rules" data-title="5 · Business rules" data-short="Business rules">
+<div class="inner">
+  <div class="head">
+    <span class="eyebrow">Category 5 of 7</span>
+    <h1>Business rules</h1>
+    <p class="def">The fixed policies and constraints the product must obey regardless of screen or feature — who may see what, what is never allowed, what is decided and stays decided — with the reasoning the specification gives, and the cost it records for each.</p>
+    <div class="stat" data-stat></div>
+  </div>
+  <nav class="subnav" aria-label="On this slide"></nav>
+  <div class="content">
+
+    <h2 id="br-identity">Identity and access</h2>
+    <div class="items">
+      <div class="item" id="br-1"><span class="id">BR-1</span><div><p><b>A student's identity is the school-issued email account.</b> There is no "type your name and class" entry. Reason: impersonation — a student cannot claim to be another student; attendance built on self-typed names "could not be trusted or forwarded".<span class="ref">§3.2</span></p></div></div>
+      <div class="item" id="br-2"><span class="id">BR-2</span><div><p><b>One active sign-in per student account.</b> A second device ends the first.<span class="ref">§3.2</span></p></div></div>
+      <div class="item" id="br-3"><span class="id">BR-3</span><div><p><b>A teacher sees only their own classes, students and results</b> — nothing of another teacher's, nothing school-wide.<span class="ref">§3.1</span></p></div></div>
+      <div class="item" id="br-4"><span class="id">BR-4</span><div><p><b>The admin sees whether teaching is happening, not what any child answered.</b> No individual answers, reasons, anonymous questions or per-topic results.<span class="ref">§3.3</span></p></div></div>
+      <div class="item" id="br-5"><span class="id">BR-5</span><div><p><b>The headmaster never has a login.</b> "This is decided and stays decided."<span class="ref">§3.4</span></p></div></div>
+      <div class="item" id="br-6"><span class="id">BR-6</span><div><p><b>Teachers sign in with email and password</b> — no magic links, no single sign-on.<span class="ref">§3.1</span></p>
+        <aside class="cost"><span class="eyebrow">Cost of this decision</span><p>The channels note identifies 08:05 as the moment that matters and prescribes magic links so there is nothing to forget. Passwords guarantee that support call. Build password reset properly and make it fast on a phone.</p></aside>
+      </div></div>
+      <div class="item" id="br-7"><span class="id">BR-7</span><div><p><b>The console is never projected.</b> Named student data and the anonymous inbox live only there.<span class="ref">§5.2</span></p></div></div>
+    </div>
+
+    <h2 id="br-scope">Scope and language</h2>
+    <div class="items">
+      <div class="item" id="br-8"><span class="id">BR-8</span><div><p><b>The interface is Macedonian only.</b> An Albanian-language interface follows after the Macedonian corpus is proven.<span class="ref">§2</span></p></div></div>
+      <div class="item" id="br-9"><span class="id">BR-9</span><div><p><b>Curriculum grounding exists only for history, electronics and physics.</b> Every other subject works from the teacher's own input.<span class="ref">§2</span></p></div></div>
+      <div class="item" id="br-10"><span class="id">BR-10</span><div><p><b>Theory periods only.</b> Practical and laboratory lessons are excluded; pilot usage should be measured per theory period.<span class="ref">§2</span></p></div></div>
+      <div class="item" id="br-11"><span class="id">BR-11</span><div><p><b>Sessions are sized for up to about 35 students.</b> Universities are excluded partly because their halls are "far beyond the 35-student session assumption".<span class="ref">§2</span></p></div></div>
+      <div class="item" id="br-12"><span class="id">BR-12</span><div><p><b>The build must not assume a гимназија.</b> The pilot subjects point at a стручно or technical school; whether the beachhead is a private гимназија is a business decision still open.<span class="ref">§2</span></p></div></div>
+      <div class="item" id="br-13"><span class="id">BR-13</span><div><p><b>Never promise e-Дневник sync.</b> It depends on МОН.<span class="ref">§2</span></p></div></div>
+      <div class="item" id="br-14"><span class="id">BR-14</span><div><p><b>Parents are reached by the school, on paper.</b> No parent app, no parent login.<span class="ref">§2</span></p></div></div>
+    </div>
+
+    <h2 id="br-content">Lesson content</h2>
+    <div class="items">
+      <div class="item" id="br-15"><span class="id">BR-15</span><div><p><b>e-учебник rights must be resolved with МОН/БРО before the pre-loading feature ships.</b> "This is not a launch-and-see item."<span class="ref">§4.1</span></p></div></div>
+      <div class="item" id="br-16"><span class="id">BR-16</span><div><p><b>Nothing unreviewed reaches students.</b> Everything generated is editable by the teacher before it runs; the review block has no AI re-explanation; practice sets are built only from the session's own missed questions, with no new generation.<span class="ref">§4.1, §8.2, §8.3</span></p></div></div>
+      <div class="item" id="br-17"><span class="id">BR-17</span><div><p><b>Refinements are a fixed set of five one-tap actions; there is no open-ended chat.</b> Reason: they stay "inside the curriculum by construction", cost "a fraction of a conversation", and give "nothing for a prompt to wander into". This replaces the teacher chatbot described in the earlier notes.<span class="ref">§4.6</span></p></div></div>
+      <div class="item" id="br-18"><span class="id">BR-18</span><div><p><b>The generator proposes each timer; the teacher may override before the run.</b> The starting defaults are proposed, not decided.<span class="lab">Proposed · needs sign-off</span><span class="ref">§4.4</span></p></div></div>
+      <div class="item" id="br-19"><span class="id">BR-19</span><div><p><b>Editing a lesson changes later runs only.</b> The record of an earlier session is never altered.<span class="ref">§4.5</span></p></div></div>
+      <div class="item" id="br-20"><span class="id">BR-20</span><div><p><b>Lessons are shared within one school only, and a copy never modifies the original.</b> No national library, no cross-school sharing, no public lessons in v1.<span class="ref">§4.7</span></p></div></div>
+      <div class="item" id="br-21"><span class="id">BR-21</span><div><p><b>An image must never hold up a question's timer.</b><span class="ref">§4.3</span></p></div></div>
+    </div>
+
+    <h2 id="br-session">The live session</h2>
+    <div class="items">
+      <div class="item" id="br-22"><span class="id">BR-22</span><div><p><b>There is no timetable.</b> "A deliberate rejection, not an omission": a timetable is setup work that goes stale every time the school reshuffles, in exchange for ordering a list.<span class="ref">§5.1</span></p></div></div>
+      <div class="item" id="br-23"><span class="id">BR-23</span><div><p><b>The server is the timer authority</b> for every countdown; clients only display it.<span class="ref">§5.3</span></p></div></div>
+      <div class="item" id="br-24"><span class="id">BR-24</span><div><p><b>The join QR code is valid for at most 30 seconds.</b> A photographed code sent to a friend at home stops working almost immediately.<span class="ref">§5.4</span></p></div></div>
+      <div class="item" id="br-25"><span class="id">BR-25</span><div><p><b>TeacherAid's attendance is its own record.</b> Official attendance stays in e-Дневник; TeacherAid never writes to it and does not replace it.<span class="ref">§5.4, §8.1</span></p></div></div>
+      <div class="item" id="br-26"><span class="id">BR-26</span><div><p><b>Prediction is the default opener mode.</b><span class="ref">§5.5</span></p></div></div>
+      <div class="item" id="br-27"><span class="id">BR-27</span><div><p><b>Points for being right, and points for giving a reason — right or wrong. The ratio between the two is a product decision and must not be configurable by a teacher.</b> "It is the mechanism, not a preference."<span class="ref">§5.5</span></p></div></div>
+      <div class="item" id="br-28"><span class="id">BR-28</span><div><p><b>Reasons are shown to the class without names.</b> Only the teacher's console shows who wrote what.<span class="ref">§5.5</span></p></div></div>
+      <div class="item" id="br-29"><span class="id">BR-29</span><div><p><b>Pop-up questions are teacher-triggered, never scheduled.</b> "Unpredictability is the point."<span class="ref">§5.6</span></p></div></div>
+      <div class="item" id="br-30"><span class="id">BR-30</span><div><p><b>Anonymous questions are anonymous to classmates, not to the teacher.</b> Reason: the fear being designed around is peer judgement, not the teacher; the teacher knowing "is what makes the feature safe to run at all, because there is no anonymous channel for abuse". Default limit 3 per student per lesson.<span class="ref">§5.7</span></p>
+        <aside class="cost"><span class="eyebrow">Cost of this decision</span><p>The data-and-privacy note currently promises these are stored "without student id". That is now false and the note must be corrected before any ДПА or parent notice is issued on the old wording.</p></aside>
+      </div></div>
+      <div class="item" id="br-31"><span class="id">BR-31</span><div><p><b>A question is never edited while a session runs.</b> It can only be skipped; "changing a question's wording while thirty phones are rendering it is where live sessions break".<span class="ref">§5.8</span></p></div></div>
+      <div class="item" id="br-32"><span class="id">BR-32</span><div><p><b>An answer given during a dropped connection counts, with its original time.</b><span class="ref">§5.9</span></p></div></div>
+      <div class="item" id="br-33"><span class="id">BR-33</span><div><p><b>A session ends only when the teacher presses End.</b> No auto-close.<span class="ref">§5.10</span></p>
+        <aside class="cost"><span class="eyebrow">Cost of this decision</span><p>A forgotten tap leaves a session open, points unsettled and attendance unwritten, and the class stays at the top of the teacher's list until someone notices. Build a visible open-session indicator and make ending an already-open session from anywhere in the app a one-tap action.</p></aside>
+      </div></div>
+    </div>
+
+    <h2 id="br-focus">Focus lock and phones</h2>
+    <div class="items">
+      <div class="item" id="br-34"><span class="id">BR-34</span><div><p><b>Focus lock is mandatory: no authorization, no join.</b> This overrides the "not blocked, only flagged" behaviour in the earlier notes.<span class="ref">§6.1</span></p>
+        <aside class="cost"><span class="eyebrow">Cost of this decision</span><p>The Q&amp;A prep currently answers judges and parents with: "a student can revoke it — and then the teacher sees a focus flag. It's social and technical, not a prison, and that's why parents accept it." That answer is no longer true and must be rewritten before it is given again. The new answer has to justify a hard requirement on a personal phone. It also means the student app is a hard dependency for every single participant — there is no web fallback and no gradual adoption.</p></aside>
+      </div></div>
+      <div class="item" id="br-35"><span class="id">BR-35</span><div><p><b>The lock never reads what a student does in other apps.</b> It knows only that TeacherAid is not in the foreground.<span class="ref">§6.2</span></p></div></div>
+      <div class="item" id="br-36"><span class="id">BR-36</span><div><p><b>The distraction list is set school-wide by the admin, not per teacher.</b> Reason: students compare rules between teachers, and inconsistent ones invite argument in class.<span class="ref">§6.3</span></p></div></div>
+      <div class="item" id="br-37"><span class="id">BR-37</span><div><p><b>A student without a working phone, or without focus-lock authorization, is marked present, gets no points, and the reason is shown — never marked absent.</b> "A false absence over a phone setting is the incident that reaches a parent, then the headmaster, and ends a pilot."<span class="ref">§6.4, §7.1</span></p></div></div>
+      <div class="item" id="br-38"><span class="id">BR-38</span><div><p><b>Start the Apple Family Controls entitlement request early.</b> It takes weeks to obtain.<span class="ref">§6.2</span></p></div></div>
+    </div>
+
+    <h2 id="br-results">Results and assessment</h2>
+    <div class="items">
+      <div class="item" id="br-39"><span class="id">BR-39</span><div><p><b>The app does not grade — but it holds the data a grade could be built from, and that distinction has to be stated deliberately rather than assumed.</b><span class="ref">§8.4</span></p>
+        <aside class="cost"><span class="eyebrow">Cost of this decision</span><p>Per-topic correctness per student is an assessment record on a minor. It needs its own clause in the ДПА, an answer for parents, and a rewrite of the "TeacherAid never grades anyone" framing in the earlier notes and in Q&amp;A prep answer #9.</p></aside>
+      </div></div>
+      <div class="item" id="br-40"><span class="id">BR-40</span><div><p><b>Practice sets are optional and score points.</b><span class="ref">§8.3</span></p>
+        <aside class="cost"><span class="eyebrow">Cost of this decision</span><p>The earlier notes state four separate times that TeacherAid has no homework and is not a learning management system. That line is now crossed. The positioning sentence — "everything else is a tool for the teacher or a game for the students, TeacherAid is the lesson" — needs rewriting to survive it, and parents will read optional practice as homework.</p></aside>
+      </div></div>
+    </div>
+
+    <h2 id="br-points">Points, badges and leaderboards</h2>
+    <div class="items">
+      <div class="item" id="br-41"><span class="id">BR-41</span><div><p><b>Scoring values are fixed and identical in every school</b>, so class and school leaderboards compare like with like and no teacher can inflate their class. The single exception: a teacher may switch the speed bonus off for a class — for a group where it causes rushing, or a subject where it rewards the wrong instinct.<span class="ref">§13.1</span></p></div></div>
+      <div class="item" id="br-42"><span class="id">BR-42</span><div><p><b>A reasoned wrong answer must score close to a silent right one.</b> That is the productive-failure mechanism; it is why the proposal puts reason points at 8 against 10 "rather than a token 2".<span class="ref">§13.1</span></p></div></div>
+      <div class="item" id="br-43"><span class="id">BR-43</span><div><p><b>The point values themselves are proposed, not decided.</b> They need sign-off before they are built.<span class="lab">Proposed · needs sign-off</span><span class="ref">§13.1</span></p></div></div>
+      <div class="item" id="br-44"><span class="id">BR-44</span><div><p><b>Badges ship only once designed.</b> "Empty badges are worse than none."<span class="ref">§13.2</span></p></div></div>
+      <div class="item" id="br-45"><span class="id">BR-45</span><div><p><b>No streaks.</b> They punish the student who was ill for a week, and streak pressure is the part parents notice.<span class="ref">§13.2</span></p></div></div>
+      <div class="item" id="br-46"><span class="id">BR-46</span><div><p><b>Class leaderboards use real names; school leaderboards use nicknames by default</b>, and the school may choose otherwise.<span class="ref">§11.3, §13.3</span></p></div></div>
+      <div class="item" id="br-47"><span class="id">BR-47</span><div><p><b>Seasons run per semester</b>, matching the Macedonian school calendar: a season closes when marks are being decided and the teacher wants participation figures anyway, and a student who fell behind in October is not written off until May.<span class="ref">§13.3</span></p></div></div>
+      <div class="item" id="br-48"><span class="id">BR-48</span><div><p><b>No national leaderboard in v1.</b><span class="ref">§13.3</span></p></div></div>
+    </div>
+
+    <h2 id="br-data">Data, privacy and security</h2>
+    <div class="items">
+      <div class="item" id="br-49"><span class="id">BR-49</span><div><p><b>The school is the data controller; TeacherAid is the processor</b>, under a ДПА with each school. The governing law is ЗЗЛП (2020), GDPR-aligned.<span class="ref">§11.2</span></p></div></div>
+      <div class="item" id="br-50"><span class="id">BR-50</span><div><p><b>Two clauses the ДПА must now contain:</b> per-topic assessment data on minors (§8.4), and anonymous questions stored with the sender's identity (§5.7).<span class="ref">§11.2</span></p></div></div>
+      <div class="item" id="br-51"><span class="id">BR-51</span><div><p><b>The age of digital consent in ЗЗЛП must be verified before launch</b> — the GDPR default is 16; states may lower it to 13.<span class="lab">(verify)</span><span class="ref">§11.2</span></p></div></div>
+      <div class="item" id="br-52"><span class="id">BR-52</span><div><p><b>No standing staff access to any school's data.</b> Access is per support incident, time-limited, expires automatically, is logged, and the school admin can see every occurrence.<span class="ref">§11.4</span></p></div></div>
+      <div class="item" id="br-53"><span class="id">BR-53</span><div><p><b>Export and deletion requests are handled manually, on the school's written request.</b><span class="ref">§11.5</span></p>
+        <aside class="cost"><span class="eyebrow">Cost of this decision</span><p>No self-serve export or deletion for the admin. The ЗЗЛП response clock is a legal one and it now depends on one person being available and not on holiday. With per-student assessment data in scope, the stakes are higher than when the privacy note was written. Track requests somewhere durable from the first one.</p></aside>
+      </div></div>
+      <div class="item" id="br-54"><span class="id">BR-54</span><div><p><b>Retention:</b> session data for the current school year plus one, then aggregated and deleted; monthly reports kept in aggregate without names; a student who leaves deleted within 30 days on the school's request.<span class="ref">§11.6</span></p></div></div>
+      <div class="item" id="br-55"><span class="id">BR-55</span><div><p><b>EU hosting; encryption in transit and at rest; role-based access; the roster is never sent to the AI provider.</b><span class="ref">§11.7</span></p></div></div>
+      <div class="item" id="br-56"><span class="id">BR-56</span><div><p><b>Roster changes are made by the school admin only.</b> A mid-year join is shown as such; a removed student's data is retained until deletion is requested; a moved student's history moves with them — a split record "is both useless to a teacher and a problem when the school asks for everything held on that student".<span class="ref">§12</span></p></div></div>
+    </div>
+
+    <h2 id="br-onboard">Onboarding and accessibility</h2>
+    <div class="items">
+      <div class="item" id="br-57"><span class="id">BR-57</span><div><p><b>Each class spends one period on setup before its first real lesson.</b> Unverified assumption C.<span class="ref">§10.1</span></p></div></div>
+      <div class="item" id="br-58"><span class="id">BR-58</span><div><p><b>The guided first run must work fifty-five times in one week without a founder in the room.</b><span class="ref">§10.2</span></p></div></div>
+      <div class="item" id="br-59"><span class="id">BR-59</span><div><p><b>Accessibility is baseline only in v1.</b> Adequate contrast, legible at the back of the room and on a cheap screen, never colour alone for right or wrong.<span class="ref">§10.4</span></p>
+        <aside class="cost"><span class="eyebrow">Cost of this decision</span><p>No per-student extra time, no committed screen-reader support, no text scaling guarantee. The core loop is "read fast, answer in twenty seconds", which is hardest on exactly the students who most need an accommodation — and a class of 28 will contain several. Recorded as a known limitation, not an oversight. Expect it to be raised by a parent, a school psychologist or the ДПИ.</p></aside>
+      </div></div>
+    </div>
+
+    <h2 id="br-doc">Rules about the specification itself</h2>
+    <div class="items">
+      <div class="item" id="br-60"><span class="id">BR-60</span><div><p><b>Where the specification and an older note disagree, the specification is right.</b><span class="ref">§1</span></p></div></div>
+      <div class="item" id="br-61"><span class="id">BR-61</span><div><p><b>Anything marked (verify) is unchecked</b> and must not be treated as fact.<span class="ref">§1</span></p></div></div>
+    </div>
+
+    <h2 id="br-empty">Empty cases in this category</h2>
+    <div class="emptyset">
+      <div class="empty" id="e-39"><span class="tag"><span class="id">E-39</span>Empty case · who signs off</span><p>Timers (§4.4) and point values (§13.1) "need sign-off". Who gives it is not stated.</p></div>
+      <div class="empty" id="e-40"><span class="tag"><span class="id">E-40</span>Empty case · library copies after a teacher leaves</span><p>What happens to a teacher's saved lessons and colleagues' copies when the teacher leaves the school is not stated (§4.7, §12).</p></div>
+      <div class="empty" id="e-41"><span class="tag"><span class="id">E-41</span>Empty case · hosting location</span><p>"EU hosting" (§11.7). No country or provider is named.</p></div>
+      <div class="empty" id="e-42"><span class="tag"><span class="id">E-42</span>Empty case · the rest of the ДПА</span><p>Only the two new clauses are specified (§11.2). The agreement's other terms are not in the specification.</p></div>
+      <div class="empty" id="e-43"><span class="tag"><span class="id">E-43</span>Empty case · the parent notice</span><p>A parent notice is referred to as needing review before week one (§14, assumption D) and as affected by the focus-lock change (§6.1). Its content is not specified.</p></div>
+      <div class="empty" id="e-44"><span class="tag"><span class="id">E-44</span>Empty case · what "aggregated" means</span><p>Session data is "aggregated and deleted" after the school year plus one (§11.6). What is kept in aggregate, and at what level, is not defined.</p></div>
+    </div>
+
+  </div>
+</div>
+</section>
+
+<!-- ============ 6. EDGE CASES ============ -->
+<section class="slide" id="edge" data-title="6 · Edge cases and exceptions" data-short="Edge cases">
+<div class="inner">
+  <div class="head">
+    <span class="eyebrow">Category 6 of 7</span>
+    <h1>Edge cases and exceptions</h1>
+    <p class="def">The unusual or failing situations the specification anticipates, what happens in each, and why — followed by the situations it does not cover.</p>
+    <div class="stat" data-stat></div>
+  </div>
+  <nav class="subnav" aria-label="On this slide"></nav>
+  <div class="content">
+
+    <h2 id="ec-live">During a session</h2>
+    <div class="tablewrap"><table>
+      <thead><tr><th>#</th><th>Situation</th><th>What happens</th><th>Why, in the specification's words</th><th>§</th></tr></thead>
+      <tbody>
+        <tr id="ec-1"><td><span class="id">EC-1</span></td><td>A question turns out to be wrong or broken mid-lesson</td><td>The teacher skips it. It is removed from the session, nobody is scored on it, and the class view says so plainly. No live editing; the teacher fixes the lesson afterwards.</td><td>"Changing a question's wording while thirty phones are rendering it is where live sessions break."</td><td>5.8</td></tr>
+        <tr id="ec-2"><td><span class="id">EC-2</span></td><td>A student's phone loses connection for a moment</td><td>Answers queue locally and sync on reconnect. A student who answers during a 20-second dropout is still credited, with their original answer time.</td><td>Students are frequently on mobile data in a concrete building.</td><td>5.9</td></tr>
+        <tr id="ec-3"><td><span class="id">EC-3</span></td><td>A student looks disengaged but is actually offline</td><td>The console shows "offline" and "has not answered" as two different states.</td><td>"From the front of the room a dropped connection and a disengaged student look identical, and one of them is about to get a focus flag they did not earn."</td><td>5.9</td></tr>
+        <tr id="ec-4"><td><span class="id">EC-4</span></td><td>Everything fails — no network at all</td><td>The teacher's lesson is cached on their device. They still have the questions and run them out loud. Points pause.</td><td>The lesson must survive the network.</td><td>5.9</td></tr>
+        <tr id="ec-5"><td><span class="id">EC-5</span></td><td>The teacher forgets to press End</td><td>The session stays open, points unsettled, attendance unwritten, and the class stays at the top of the list. A visible open-session indicator and a one-tap End from anywhere in the app exist for this.</td><td>There is no auto-close, so the forgotten tap must be made obvious.</td><td>5.10</td></tr>
+        <tr id="ec-6"><td><span class="id">EC-6</span></td><td>The teacher gets absorbed and fires no questions</td><td>After several minutes the console shows a quiet suggestion — not a modal, not a sound.</td><td>This is "the failure mode that produces an empty dashboard and a school that looks inactive".</td><td>5.6</td></tr>
+        <tr id="ec-7"><td><span class="id">EC-7</span></td><td>A student joins late</td><td>They are marked present, timestamped as late.</td><td>Attendance carries a timestamp.</td><td>5.4</td></tr>
+        <tr id="ec-8"><td><span class="id">EC-8</span></td><td>A student signs in on a second device</td><td>The first sign-in ends.</td><td>One active sign-in per account.</td><td>3.2</td></tr>
+        <tr id="ec-9"><td><span class="id">EC-9</span></td><td>A student photographs the QR and sends it to a friend at home</td><td>The code stops working within 30 seconds.</td><td>The QR rotates; this "closes the gap" a judge question had exposed.</td><td>5.4</td></tr>
+        <tr id="ec-10"><td><span class="id">EC-10</span></td><td>An image in a question has not loaded</td><td>The timer runs regardless; it never waits for the image.</td><td>Low-bandwidth path for phones on mobile data.</td><td>4.3</td></tr>
+        <tr id="ec-11"><td><span class="id">EC-11</span></td><td>Setting up the projector with thirty students waiting</td><td>The class view opens as a separate window in one click; onboarding covers the step explicitly.</td><td>Extended display setup "is a real friction point".</td><td>5.2, 10.2</td></tr>
+        <tr id="ec-12"><td><span class="id">EC-12</span></td><td>The speed bonus makes a class rush</td><td>The teacher switches the speed bonus off for that class — the only scoring value a teacher may change.</td><td>Some groups rush; some subjects reward the wrong instinct.</td><td>13.1</td></tr>
+        <tr id="ec-13"><td><span class="id">EC-13</span></td><td>Two classes run the same lesson</td><td>Each run is its own session; the teacher can compare how the two did on the same question.</td><td>One lesson object, many sessions.</td><td>4.5</td></tr>
+      </tbody>
+    </table></div>
+
+    <h2 id="ec-phones">Phones and the focus lock</h2>
+    <div class="tablewrap"><table>
+      <thead><tr><th>#</th><th>Situation</th><th>What happens</th><th>Why, in the specification's words</th><th>§</th></tr></thead>
+      <tbody>
+        <tr id="ec-14"><td><span class="id">EC-14</span></td><td>A student cannot or will not authorize the focus lock</td><td>Treated exactly like a student with no phone: marked present, no points, the reason shown on the dashboard. Never marked absent.</td><td>"A false absence over a phone setting is the incident that reaches a parent, then the headmaster, and ends a pilot."</td><td>6.4</td></tr>
+        <tr id="ec-15"><td><span class="id">EC-15</span></td><td>No phone, dead battery, or no data</td><td>The teacher marks the student present in one tap; no points for the lesson; the dashboard shows the reason.</td><td>"One code path serving four causes. It will be used in most lessons."</td><td>7.1</td></tr>
+        <tr id="ec-16"><td><span class="id">EC-16</span></td><td>Phones that resist during setup</td><td>The teacher is present during the setup lesson "to fix the five phones that resist".</td><td>The alternative is spending that time unplanned during the first opener.</td><td>10.1</td></tr>
+        <tr id="ec-17"><td><span class="id">EC-17</span></td><td>A student needs an accommodation — extra time, a screen reader, larger text</td><td>Not supported in v1. Recorded as a known limitation.</td><td>"Expect it to be raised by a parent, a school psychologist or the ДПИ."</td><td>10.4</td></tr>
+        <tr id="ec-18"><td><span class="id">EC-18</span></td><td>A student pairs with a classmate's device, or the teacher enters answers for them</td><td>Not possible in v1.</td><td>Stated exclusion.</td><td>7.2</td></tr>
+      </tbody>
+    </table></div>
+
+    <h2 id="ec-roster">Rosters and staff</h2>
+    <div class="tablewrap"><table>
+      <thead><tr><th>#</th><th>Situation</th><th>What happens</th><th>Why, in the specification's words</th><th>§</th></tr></thead>
+      <tbody>
+        <tr id="ec-19"><td><span class="id">EC-19</span></td><td>A student joins the school mid-year</td><td>The admin adds them. They start at zero points; the class leaderboard shows they joined partway through.</td><td>Otherwise "it looks broken".</td><td>12</td></tr>
+        <tr id="ec-20"><td><span class="id">EC-20</span></td><td>A student leaves</td><td>The admin removes them. Their data is retained under the retention rule until deletion is requested; deleted within 30 days of the school's request.</td><td>Retention rule.</td><td>12, 11.6</td></tr>
+        <tr id="ec-21"><td><span class="id">EC-21</span></td><td>A student moves to another class</td><td>The admin moves them. Their history moves with them.</td><td>A split record is useless to a teacher and a problem for a data request.</td><td>12</td></tr>
+        <tr id="ec-22"><td><span class="id">EC-22</span></td><td>A teacher goes on extended leave, falls ill, or leaves the school</td><td><b>No supported path in v1.</b> Their classes are stranded in an account nobody is using. The specification says "this will happen within the first school year".</td><td>Reassigning a class, and a second teacher on a class, are out of v1.</td><td>12, 2</td></tr>
+        <tr id="ec-23"><td><span class="id">EC-23</span></td><td>A substitute or co-teacher needs to run a class</td><td>Not possible in v1.</td><td>"No co-teaching, no substitutes."</td><td>2</td></tr>
+        <tr id="ec-24"><td><span class="id">EC-24</span></td><td>Only the champion teacher is active in a school</td><td>The admin's usage overview shows which teachers have not started.</td><td>The early warning must reach "somebody inside the building before renewal month, not after".</td><td>9.2</td></tr>
+        <tr id="ec-25"><td><span class="id">EC-25</span></td><td>A teacher forgets their password at 08:05</td><td>Password reset is built to be fast on a phone.</td><td>Passwords "guarantee that support call".</td><td>3.1</td></tr>
+        <tr id="ec-26"><td><span class="id">EC-26</span></td><td>Something urgent goes wrong in front of a class</td><td>A one-tap direct channel to a human.</td><td>"A help article is no use to a teacher standing in front of thirty students at 08:05."</td><td>10.3</td></tr>
+      </tbody>
+    </table></div>
+
+    <h2 id="ec-content">Content and subjects</h2>
+    <div class="tablewrap"><table>
+      <thead><tr><th>#</th><th>Situation</th><th>What happens</th><th>Why, in the specification's words</th><th>§</th></tr></thead>
+      <tbody>
+        <tr id="ec-27"><td><span class="id">EC-27</span></td><td>The subject has no loaded e-учебник</td><td>The teacher types three sentences instead. It works, without curriculum grounding.</td><td>Only the three pilot subjects are loaded.</td><td>4.1, 2</td></tr>
+        <tr id="ec-28"><td><span class="id">EC-28</span></td><td>A physics or electronics question cannot be written as four options</td><td>The numeric and true/false types exist for this.</td><td>They "cannot honestly be expressed as four options".</td><td>4.2</td></tr>
+        <tr id="ec-29"><td><span class="id">EC-29</span></td><td>A physics or electronics teacher needs a formula in a question</td><td>Rendered maths and chemical notation are supported.</td><td>"Without it those teachers cannot write their questions at all."</td><td>4.3</td></tr>
+        <tr id="ec-30"><td><span class="id">EC-30</span></td><td>A lesson would be practical or laboratory work</td><td>Out of v1. Usage will look lower in technical schools; measure per theory period.</td><td>Excluding them "structurally halves lessons-per-teacher".</td><td>2</td></tr>
+      </tbody>
+    </table></div>
+
+    <h2 id="ec-report">Reports, data and the pilot</h2>
+    <div class="tablewrap"><table>
+      <thead><tr><th>#</th><th>Situation</th><th>What happens</th><th>Why, in the specification's words</th><th>§</th></tr></thead>
+      <tbody>
+        <tr id="ec-31"><td><span class="id">EC-31</span></td><td>A school is ranked ninth of twelve</td><td>The comparison appears only on page two, which is not for forwarding; page one stays forwardable.</td><td>"A school ranked ninth of twelve will not forward a page that says so."</td><td>9.3</td></tr>
+        <tr id="ec-32"><td><span class="id">EC-32</span></td><td>The headmaster needs last month's figures for the municipality</td><td>The permanent private link in every report email reaches all past reports.</td><td>So they do "not have to ask anyone".</td><td>9.3</td></tr>
+        <tr id="ec-33"><td><span class="id">EC-33</span></td><td>A data request arrives while the one support person is on holiday</td><td>Not solved in v1: requests are manual and the legal response clock depends on that person. Track requests durably from the first one.</td><td>Cost recorded against the manual-handling decision.</td><td>11.5</td></tr>
+        <tr id="ec-34"><td><span class="id">EC-34</span></td><td>A student was ill for a week</td><td>Nothing is lost: there are no streaks, for exactly this reason.</td><td>Streaks "punish the student who was ill for a week".</td><td>13.2</td></tr>
+        <tr id="ec-35"><td><span class="id">EC-35</span></td><td>The school does not issue student mailboxes</td><td>No student can log in and nothing else works. Must be confirmed with the pilot school before any build.</td><td>Assumption A — "the single largest unverified assumption in the spec".</td><td>3.2, 14</td></tr>
+        <tr id="ec-36"><td><span class="id">EC-36</span></td><td>Apple does not grant the Family Controls entitlement in time</td><td>No iOS students at all.</td><td>Assumption F; the request takes weeks.</td><td>14, 6.2</td></tr>
+        <tr id="ec-37"><td><span class="id">EC-37</span></td><td>e-учебник rights cannot be cleared with МОН/БРО</td><td>The primary planning input and the legitimacy argument both fail; the feature must not ship.</td><td>Assumption B; "not a launch-and-see item".</td><td>4.1, 14</td></tr>
+      </tbody>
+    </table></div>
+
+    <h2 id="ec-empty">Situations the specification does not cover</h2>
+    <div class="emptyset">
+      <div class="empty" id="e-45"><span class="tag"><span class="id">E-45</span>Empty case · answering after the timer</span><p>What happens to an answer submitted after a question's timer has run out is not stated.</p></div>
+      <div class="empty" id="e-46"><span class="tag"><span class="id">E-46</span>Empty case · reaching the question limit</span><p>What a student sees or can do after sending their third anonymous question in a lesson is not stated (§5.7).</p></div>
+      <div class="empty" id="e-47"><span class="tag"><span class="id">E-47</span>Empty case · joining the wrong session</span><p>A student can only join a session they are enrolled in (§3.2). What happens when a student scans the code of another class's session is not described.</p></div>
+      <div class="empty" id="e-48"><span class="tag"><span class="id">E-48</span>Empty case · focus lock revoked mid-session</span><p>The specification states that a student without authorization cannot join (§6.1). What happens if a student revokes authorization after joining is not stated.</p></div>
+      <div class="empty" id="e-49"><span class="tag"><span class="id">E-49</span>Empty case · the teacher's laptop goes offline</span><p>Phone dropouts (§5.9) and total failure (§5.9) are covered. The case where only the teacher's laptop loses connection while the phones are fine is not.</p></div>
+      <div class="empty" id="e-50"><span class="tag"><span class="id">E-50</span>Empty case · the class view is lost mid-session</span><p>What happens if the projected window is closed or the projector fails during a session is not stated (§5.2).</p></div>
+      <div class="empty" id="e-51"><span class="tag"><span class="id">E-51</span>Empty case · two open sessions</span><p>Whether one teacher can have two sessions open at once — for example after a forgotten End (§5.10) — is not stated.</p></div>
+      <div class="empty" id="e-52"><span class="tag"><span class="id">E-52</span>Empty case · generation fails or returns too little</span><p>Generation returns 5–8 questions (§4.1). What happens if it fails, or returns fewer, is not stated.</p></div>
+      <div class="empty" id="e-53"><span class="tag"><span class="id">E-53</span>Empty case · a missing or wrong e-учебник unit</span><p>What the teacher does when the pre-loaded unit they need is missing, or its content is wrong, is not stated (§4.1).</p></div>
+      <div class="empty" id="e-54"><span class="tag"><span class="id">E-54</span>Empty case · a student's school email changes</span><p>The email is the student's identity (§3.2). What happens when a school changes or reissues it, or two students share one, is not stated.</p></div>
+      <div class="empty" id="e-55"><span class="tag"><span class="id">E-55</span>Empty case · more than 35 students</span><p>The 35-student session assumption is named (§2). What happens in a larger class is not stated.</p></div>
+      <div class="empty" id="e-56"><span class="tag"><span class="id">E-56</span>Empty case · joining late during the opener</span><p>Whether a student who joins after the opener has started can still vote and give a reason is not stated (§5.4, §5.5).</p></div>
+      <div class="empty" id="e-57"><span class="tag"><span class="id">E-57</span>Empty case · numeric answer format</span><p>A numeric question accepts a typed number within a tolerance (§4.2). How decimal commas, units or spaces are handled is not stated.</p></div>
+    </div>
+
+  </div>
+</div>
+</section>
+<!-- ============ 7. ACCEPTANCE CRITERIA ============ -->
+<section class="slide" id="acceptance" data-title="7 · Acceptance criteria" data-short="Acceptance" data-empty-slide="1">
+<div class="inner">
+  <div class="head">
+    <span class="eyebrow">Category 7 of 7</span>
+    <h1>Acceptance criteria</h1>
+    <p class="def">The conditions under which each feature counts as done — statements that can be checked and passed or failed before a school is handed the product.</p>
+    <div class="stat" data-stat></div>
+  </div>
+  <nav class="subnav" aria-label="On this slide"></nav>
+  <div class="content">
+
+    <h2 id="ac-status">Status: empty</h2>
+    <div class="empty" id="e-58"><span class="tag"><span class="id">E-58</span>Empty case · acceptance criteria</span><p>The specification contains no acceptance criteria. No statement in it is framed as a condition of acceptance, a test, or a "done when". By the rule chosen for this document, none have been derived.</p></div>
+    <div class="empty" id="e-59"><span class="tag"><span class="id">E-59</span>Empty case · definition of done</span><p>There is no definition of done for any requirement, area or release.</p></div>
+    <div class="empty" id="e-60"><span class="tag"><span class="id">E-60</span>Empty case · pilot exit criteria</span><p>The specification names a pilot repeatedly (§2, §9.3, §14) but sets no conditions for a pilot to be judged successful or ended.</p></div>
+
+    <h2 id="ac-nearest">What the specification offers that is adjacent</h2>
+    <p>These are kept where they are in this document, not restated as criteria, because the specification presents them as behaviour or as open items — not as tests.</p>
+    <div class="tablewrap"><table>
+      <thead><tr><th>What exists</th><th>Examples</th><th>Why it is not an acceptance criterion</th></tr></thead>
+      <tbody>
+        <tr><td>Measurable values inside requirements and rules</td><td>QR rotates every 30 seconds (<a href="#fr-31">FR-31</a>); 3 anonymous questions per student per lesson (<a href="#fr-38">FR-38</a>); 5–8 pop-up questions per lesson (<a href="#fr-15">FR-15</a>); 2–4 options per multiple-choice question (<a href="#fr-18">FR-18</a>); one active sign-in per account (<a href="#fr-6">FR-6</a>); deletion within 30 days (<a href="#fr-69">FR-69</a>); data kept for the school year plus one (<a href="#fr-69">FR-69</a>)</td><td>They describe how the system behaves. The specification does not say they are the conditions under which the feature is accepted, or how they would be checked.</td></tr>
+        <tr><td>Values explicitly not yet decided</td><td>Timers per question shape (<a href="#fr-23">FR-23</a>); point values per event (<a href="#fr-74">FR-74</a>)</td><td>Criteria cannot be written for a value that has not been signed off.</td></tr>
+        <tr><td>"Evidence needed" for the six open assumptions</td><td>Confirm student mailboxes with the pilot school; a written answer from МОН/БРО; ask the pilot teacher; review the parent notice before week one (<a href="#ctx-assume">Context · Open assumptions</a>)</td><td>These verify the business premises the product rests on, not whether a feature works.</td></tr>
+        <tr><td>Items marked (verify)</td><td>The age of digital consent in ЗЗЛП (<a href="#br-51">BR-51</a>); assumption A (<a href="#ctx-assume">§14</a>)</td><td>They are facts to be checked, not features to be accepted.</td></tr>
+        <tr><td>Qualities stated without a measure</td><td>Password reset "fast on a phone" (<a href="#fr-2">FR-2</a>); "legible at the back of the room and on a cheap screen" (<a href="#fr-64">FR-64</a>); the nudge is "quiet" (<a href="#fr-36">FR-36</a>)</td><td>No threshold or method of checking is given.</td></tr>
+      </tbody>
+    </table></div>
+
+    <h2 id="ac-fill">To fill this category</h2>
+    <p>Someone must decide what "done" means for each requirement on the <a href="#requirements">Functional requirements</a> slide, and sign off the proposed timers and points first. The measurable values above are the natural starting points; the qualities stated without a measure are where a decision is needed before a criterion can be written.</p>
+
+  </div>
+</div>
+</section>
+
+<!-- ============ APPENDIX ============ -->
+<section class="slide" id="appendix" data-title="Appendix · Register, changes, glossary" data-short="Appendix">
+<div class="inner">
+  <div class="head">
+    <span class="eyebrow">Appendix</span>
+    <h1>Register, changes and glossary</h1>
+    <p class="def">Every empty case in one list; what the specification changes in the earlier notes; and plain-language expansions of the terms it uses.</p>
+    <div class="stat" data-stat></div>
+  </div>
+  <nav class="subnav" aria-label="On this slide"></nav>
+  <div class="content">
+
+    <h2 id="ap-register">Register of empty cases</h2>
+    <p>Everything this document could not fill from the specification, in one place. Each entry links to where it appears. This list is the work order for whoever completes the specification.</p>
+    <div class="tablewrap"><table id="register">
+      <thead><tr><th>#</th><th>Topic</th><th>Category</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+
+    <h2 id="ap-changes">What the specification changes in the earlier notes</h2>
+    <p>The specification's own integration work order (§15): where the pitch-era notes are now out of date, and what they become. The specification says "nothing here is done yet".</p>
+    <div class="tablewrap"><table>
+      <thead><tr><th>#</th><th>Note</th><th>Now out of date</th><th>Becomes</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>features, technical-architecture, handbook 2.4, Q&amp;A prep #2</td><td>"Not blocked, only flagged"; "not prison-grade — that's why parents accept it"</td><td>Focus lock mandatory; no authorization, no join. The parent and judge answer needs rewriting.</td></tr>
+        <tr><td>2</td><td>data-and-privacy</td><td>Anonymous questions "stored without student id"</td><td>Anonymous to classmates; the teacher sees the sender. Add a ДПА clause.</td></tr>
+        <tr><td>3</td><td>features, handbook 2.4, Q&amp;A prep #9</td><td>"TeacherAid never grades anyone"</td><td>Per-topic correctness per student is stored. Add a ДПА clause and a parent answer.</td></tr>
+        <tr><td>4</td><td>product-overview, features, handbook 2.5</td><td>"No homework", "not an LMS"</td><td>Optional practice sets after class. Rewrite the positioning line.</td></tr>
+        <tr><td>5</td><td>Handbook 2.4, business-model-canvas block 2, features</td><td>Teacher chatbot</td><td>One-tap refinements, no open chat.</td></tr>
+        <tr><td>6</td><td>user-flows</td><td>"Name and class typed once"; "added by scanning, not by typing a list"</td><td>School-email login; admin-managed rosters.</td></tr>
+        <tr><td>7</td><td>user-flows</td><td>A "Today" screen implying a schedule</td><td>No timetable at all.</td></tr>
+        <tr><td>8</td><td>features, technical-architecture, product-overview</td><td>"Type three sentences" as the headline input</td><td>e-учебник unit is primary; three sentences is the fallback. Add the rights item.</td></tr>
+        <tr><td>9</td><td>Every business note</td><td>"Private гимназија beachhead"</td><td>Pilot subjects history, electronics and physics imply a стручно or technical school.</td></tr>
+      </tbody>
+    </table></div>
+    <p>Also on integration, per §15: add assumptions A–F to the risks-and-assumptions register; trim the features note to the short overview and link to the specification; remove the university line from v1 scope wherever it implies a build commitment (the 15 institutions stay in the market sizing, not in the product).</p>
+
+    <h2 id="ap-glossary">Glossary</h2>
+    <p class="small">Plain-language expansions for the reader. The specification uses these terms without expanding them; the expansions below are general knowledge, not taken from the specification.</p>
+    <dl class="gloss">
+      <dt>e-учебник / e-учебници</dt><dd>The national electronic textbook(s) for a subject, published under МОН and written by named authors.</dd>
+      <dt>e-Дневник</dt><dd>The official electronic class register in which attendance is recorded. TeacherAid never writes to it.</dd>
+      <dt>МОН</dt><dd>The Ministry of Education and Science of North Macedonia.</dd>
+      <dt>БРО</dt><dd>The Bureau for Development of Education, the ministry's curriculum body.</dd>
+      <dt>ДПИ</dt><dd>The State Education Inspectorate.</dd>
+      <dt>ЗЗЛП</dt><dd>The Law on Personal Data Protection (2020), North Macedonia's GDPR-aligned data law.</dd>
+      <dt>ДПА</dt><dd>The data processing agreement between a school (the data controller) and TeacherAid (the processor).</dd>
+      <dt>гимназија / стручно / уметничко</dt><dd>The three kinds of secondary school: general (grammar), vocational, and arts.</dd>
+      <dt>практична / лабораториска настава</dt><dd>Practical or laboratory lessons, as opposed to theory periods.</dd>
+      <dt>Focus lock</dt><dd>The specification's term for the native phone app feature that keeps distracting apps closed during a lesson.</dd>
+      <dt>Opener</dt><dd>The prediction or debate question that starts every lesson.</dd>
+      <dt>Pop-up</dt><dd>A timed question the teacher fires to every phone during teaching.</dd>
+      <dt>Class view / console</dt><dd>The two windows of a live session: the projected one and the teacher's private one.</dd>
+      <dt>Session</dt><dd>One run of a lesson with one class. The same lesson can be run as many sessions.</dd>
+      <dt>Hypercorrection, productive failure</dt><dd>Learning-research effects the specification cites as the reason for scoring a written reason whether right or wrong.</dd>
+    </dl>
+
+    <h2 id="ap-method">Source and method</h2>
+    <p><b>Source file:</b> <code>teacher-aid-brain/Areas/product/feature-spec-v1.md</code>, 15 sections, created 15 September 2026, status "draft — not yet integrated into the vault".</p>
+    <p><b>Rules applied:</b> the specification is the only source; the two categories the specification does not frame (user stories, acceptance criteria) contain only empty cases; every statement cites its section; the document is in English with Macedonian names in Cyrillic; every gap is numbered and listed in the register above.</p>
+    <p><b>Organized:</b> 17 September 2026.</p>
+
+  </div>
+</div>
+</section>
+
+</main>
+
+<div class="nav" aria-label="Slide navigation">
+  <button type="button" id="prev" aria-label="Previous slide">&#8592;</button>
+  <button type="button" id="next" aria-label="Next slide">&#8594;</button>
+</div>
+
+<dialog id="contents" aria-label="Contents">
+  <div class="dl-h"><h2>Contents</h2><button class="tbtn" type="button" id="close-contents">Close</button></div>
+  <ol class="dl-list" id="dl-list"></ol>
+</dialog>
+
+<script>
+(function(){
+  var deck = document.getElementById('deck');
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var nowEl = document.getElementById('now'), counterEl = document.getElementById('counter');
+  var prev = document.getElementById('prev'), next = document.getElementById('next');
+  var dlg = document.getElementById('contents'), dlList = document.getElementById('dl-list');
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var idx = 0;
+
+  /* Per-slide counts: items, empty cases; fill the header stat line and the cover list */
+  var totalItems = 0, totalEmpty = 0;
+  slides.forEach(function(s){
+    var items = s.querySelectorAll('.item, .flow, tr[id^="ec-"]').length;
+    var empties = s.querySelectorAll('.empty').length;
+    totalItems += items; totalEmpty += empties;
+    var stat = s.querySelector('[data-stat]');
+    if (stat) {
+      var parts = [];
+      if (s.hasAttribute('data-empty-slide')) parts.push('<span class="e">Status <b>empty case</b></span>');
+      else if (items) parts.push('<span>Items <b>' + items + '</b></span>');
+      parts.push('<span class="e">Empty cases <b>' + empties + '</b></span>');
+      stat.innerHTML = parts.join('');
+    }
+    var st = document.querySelector('.cats .st[data-count="' + s.id + '"]');
+    if (st) {
+      if (s.hasAttribute('data-empty-slide')) { st.textContent = 'empty case'; st.classList.add('e'); }
+      else st.textContent = (items ? items + ' items' : '') + (items && empties ? ' · ' : '') + (empties ? empties + ' empty' : '');
+    }
+  });
+  var ci = document.getElementById('c-items'), ce = document.getElementById('c-empty');
+  if (ci) ci.textContent = totalItems;
+  if (ce) ce.textContent = totalEmpty;
+
+  /* Sub-navigation per slide, built from its h2 headings */
+  slides.forEach(function(s){
+    var nav = s.querySelector('.subnav'); if (!nav) return;
+    var hs = s.querySelectorAll('.content h2'); if (!hs.length) { nav.remove(); return; }
+    var ol = document.createElement('ol');
+    hs.forEach(function(h, i){
+      if (!h.id) h.id = s.id + '-h' + i;
+      var li = document.createElement('li'), a = document.createElement('a');
+      a.href = '#' + h.id; a.textContent = h.textContent.replace(/\s+/g,' ').trim();
+      var n = 0, el = h.nextElementSibling;
+      while (el && el.tagName !== 'H2') { n += el.querySelectorAll('.item, .flow, .empty, tr[id^="ec-"]').length + (el.matches('.item, .flow, .empty') ? 1 : 0); el = el.nextElementSibling; }
+      if (n) { var c = document.createElement('span'); c.className = 'cnt'; c.textContent = n; a.appendChild(c); }
+      li.appendChild(a); ol.appendChild(li);
+    });
+    var lbl = document.createElement('p'); lbl.className = 'lbl'; lbl.textContent = 'On this slide';
+    nav.appendChild(lbl); nav.appendChild(ol);
+  });
+
+  /* Register of empty cases */
+  var reg = document.querySelector('#register tbody');
+  if (reg) {
+    document.querySelectorAll('.empty').forEach(function(e){
+      var slide = e.closest('.slide');
+      var id = e.querySelector('.id') ? e.querySelector('.id').textContent : '';
+      var tag = e.querySelector('.tag') ? e.querySelector('.tag').textContent : '';
+      var topic = tag.replace(id, '').replace(/^\s*Empty case\s*·?\s*/i, '').trim();
+      var tr = document.createElement('tr');
+      tr.innerHTML = '<td><span class="id"></span></td><td><a></a></td><td></td>';
+      tr.children[0].firstChild.textContent = id;
+      var a = tr.children[1].firstChild; a.href = '#' + e.id; a.textContent = topic.charAt(0).toUpperCase() + topic.slice(1);
+      tr.children[2].textContent = slide ? slide.getAttribute('data-short') : '';
+      reg.appendChild(tr);
+    });
+  }
+
+  /* Contents dialog */
+  slides.forEach(function(s, i){
+    var li = document.createElement('li');
+    var b = document.createElement('button'); b.type = 'button';
+    var n = document.createElement('span'); n.className = 'n'; n.textContent = i === 0 ? '' : (i === slides.length - 1 ? 'A' : String(i));
+    var t = document.createElement('span'); t.className = 't'; t.textContent = s.getAttribute('data-title').replace(/^\S+\s·\s/, '');
+    var st = document.createElement('span'); st.className = 's';
+    if (s.hasAttribute('data-empty-slide')) { st.textContent = 'empty case'; st.classList.add('e'); }
+    else { var k = s.querySelectorAll('.empty').length; st.textContent = k ? k + ' empty' : ''; }
+    b.appendChild(n); b.appendChild(t); b.appendChild(st); li.appendChild(b); dlList.appendChild(li);
+    b.addEventListener('click', function(){ dlg.close(); go(i); });
+  });
+  document.getElementById('open-contents').addEventListener('click', function(){ dlg.showModal(); });
+  document.getElementById('close-contents').addEventListener('click', function(){ dlg.close(); });
+  dlg.addEventListener('click', function(e){ if (e.target === dlg) dlg.close(); });
+
+  /* Navigation */
+  function go(i, smooth){
+    i = Math.max(0, Math.min(slides.length - 1, i));
+    deck.scrollTo({ left: i * deck.clientWidth, behavior: (smooth === false || reduced) ? 'auto' : 'smooth' });
+  }
+  function update(){
+    counterEl.textContent = (idx + 1) + ' / ' + slides.length;
+    nowEl.textContent = slides[idx].getAttribute('data-title');
+    prev.disabled = idx === 0; next.disabled = idx === slides.length - 1;
+    Array.prototype.forEach.call(dlList.children, function(li, i){ li.classList.toggle('cur', i === idx); });
+    var h = '#' + slides[idx].id;
+    if (location.hash !== h) { try { history.replaceState(null, '', h); } catch (e) {} }
+  }
+  var raf = null;
+  deck.addEventListener('scroll', function(){
+    if (raf) return;
+    raf = requestAnimationFrame(function(){
+      raf = null;
+      var i = Math.round(deck.scrollLeft / deck.clientWidth);
+      if (i !== idx) { idx = i; update(); }
+    });
+  }, { passive: true });
+  prev.addEventListener('click', function(){ go(idx - 1); });
+  next.addEventListener('click', function(){ go(idx + 1); });
+  window.addEventListener('keydown', function(e){
+    if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (dlg.open) return;
+    if (e.target && e.target.closest && e.target.closest('input, textarea, select')) return;
+    if (e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); go(idx + 1); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); go(idx - 1); }
+    else if (e.key === 'Home') { e.preventDefault(); go(0); }
+    else if (e.key === 'End') { e.preventDefault(); go(slides.length - 1); }
+  });
+  window.addEventListener('resize', function(){ go(idx, false); });
+
+  /* In-document links: jump to the slide, then to the target inside it */
+  function jumpTo(id, smooth){
+    var target = document.getElementById(id); if (!target) return false;
+    var slide = target.closest('.slide'); if (!slide) return false;
+    var si = slides.indexOf(slide);
+    go(si, smooth);
+    if (target !== slide) {
+      var top = target.getBoundingClientRect().top - slide.getBoundingClientRect().top + slide.scrollTop - 16;
+      slide.scrollTo({ top: Math.max(0, top), behavior: (smooth === false || reduced) ? 'auto' : 'smooth' });
+      target.classList.remove('flash'); void target.offsetWidth; target.classList.add('flash');
+    } else {
+      slide.scrollTo({ top: 0, behavior: 'auto' });
+    }
+    return true;
+  }
+  document.addEventListener('click', function(e){
+    var a = e.target.closest && e.target.closest('a[href^="#"]'); if (!a) return;
+    var id = a.getAttribute('href').slice(1); if (!id) return;
+    if (jumpTo(id)) e.preventDefault();
+  });
+
+  /* Start at the slide in the address bar, if any */
+  var startId = location.hash.slice(1);
+  if (!startId || !jumpTo(startId, false)) go(0, false);
+  update();
+})();
+</script>
+</body>
+</html>

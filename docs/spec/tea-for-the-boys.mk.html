@@ -1,0 +1,1407 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TeacherAid v1 Спецификација</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400;1,8..60,600&family=Source+Sans+3:wght@400;600&family=Source+Code+Pro:wght@400;500&display=swap">
+<style>
+:root{
+  --paper:#F8F8F5; --ink:#1B1B19; --ink-2:#45453F; --ink-3:#77776F;
+  --rule:#D8D8D1; --rule-strong:#B4B4AB; --panel:#EEEEE8; --panel-2:#E4E4DD;
+  --accent:#A2352A; --accent-soft:rgba(162,53,42,.07); --accent-line:rgba(162,53,42,.45);
+  --serif:"Source Serif 4",Georgia,"Times New Roman",serif;
+  --sans:"Source Sans 3","Helvetica Neue",Arial,system-ui,sans-serif;
+  --mono:"Source Code Pro",ui-monospace,Menlo,Consolas,monospace;
+  --bar:52px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#191917; --ink:#EAE9E3; --ink-2:#BDBCB4; --ink-3:#8B8A82;
+    --rule:#33332E; --rule-strong:#4A4A43; --panel:#222220; --panel-2:#2B2B28;
+    --accent:#E27A68; --accent-soft:rgba(226,122,104,.10); --accent-line:rgba(226,122,104,.5);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#191917; --ink:#EAE9E3; --ink-2:#BDBCB4; --ink-3:#8B8A82;
+  --rule:#33332E; --rule-strong:#4A4A43; --panel:#222220; --panel-2:#2B2B28;
+  --accent:#E27A68; --accent-soft:rgba(226,122,104,.10); --accent-line:rgba(226,122,104,.5);
+  color-scheme:dark;
+}
+html{background:var(--paper)}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 17px/1.55 var(--serif);overflow:hidden;-webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%}
+*,*::before,*::after{box-sizing:border-box}
+a{color:inherit;text-decoration:underline;text-decoration-color:var(--rule-strong);text-underline-offset:2px}
+a:hover{text-decoration-color:var(--ink)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button{font:inherit;color:inherit}
+
+/* Top bar */
+.topbar{position:fixed;top:0;left:0;right:0;z-index:20;height:calc(var(--bar) + env(safe-area-inset-top,0px));padding-top:env(safe-area-inset-top,0px);padding-inline:16px;display:flex;align-items:center;gap:16px;background:var(--paper);border-bottom:1px solid var(--rule);font-family:var(--sans)}
+.topbar .doc{font-size:12.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
+.topbar .now{font:italic 400 15px var(--serif);color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1}
+.topbar .counter{font:500 13px var(--mono);font-variant-numeric:tabular-nums;color:var(--ink-2);white-space:nowrap}
+.tbtn{background:transparent;border:1px solid var(--rule-strong);border-radius:2px;padding:5px 11px;font:600 13px var(--sans);cursor:pointer;white-space:nowrap}
+.tbtn:hover{background:var(--panel)}
+@media (max-width:640px){.topbar .now{display:none}}
+
+/* Deck */
+.deck{position:fixed;top:calc(var(--bar) + env(safe-area-inset-top,0px));left:0;right:0;bottom:0;display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain}
+.deck::-webkit-scrollbar{display:none}
+.slide{position:relative;flex:0 0 100%;width:100%;height:100%;overflow-y:auto;overflow-x:hidden;scroll-snap-align:start;scroll-snap-stop:always;padding-block:40px calc(110px + env(safe-area-inset-bottom,0px));padding-inline:clamp(16px,5vw,72px)}
+.inner{max-width:1120px;margin-inline:auto;display:grid;grid-template-columns:200px minmax(0,1fr);gap:0 56px}
+.head{grid-column:1/-1;padding-bottom:26px;border-bottom:1px solid var(--ink);margin-bottom:36px}
+.eyebrow{display:block;font:600 12px var(--sans);letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3)}
+.head h1{font:600 clamp(30px,4vw,44px)/1.1 var(--serif);margin:8px 0 12px;text-wrap:balance;letter-spacing:-.01em}
+.head .def{font:italic 400 18px/1.45 var(--serif);color:var(--ink-2);max-width:62ch;margin:0}
+.head .stat{display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:16px;font:400 14px var(--sans);color:var(--ink-2)}
+.head .stat b{font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+.head .stat .e{color:var(--accent)}
+
+/* Side navigation inside a slide */
+.subnav{position:sticky;top:0;align-self:start;font-family:var(--sans);font-size:14px;padding-top:2px}
+.subnav .lbl{font-size:11px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);margin:0 0 10px}
+.subnav ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
+.subnav a{text-decoration:none;color:var(--ink-2);display:block;line-height:1.3}
+.subnav a:hover{color:var(--ink);text-decoration:underline}
+.subnav .cnt{font:500 12px var(--mono);color:var(--ink-3);margin-left:4px}
+@media (max-width:880px){
+  .inner{grid-template-columns:1fr;gap:0}
+  .subnav{position:static;margin-bottom:28px;padding:12px 14px;border:1px solid var(--rule);border-radius:2px}
+  .subnav ol{flex-direction:row;flex-wrap:wrap;gap:6px 16px}
+}
+
+/* Prose */
+.content{min-width:0}
+.content h2{font:600 24px/1.2 var(--serif);margin:44px 0 14px;padding-top:6px;letter-spacing:-.005em;scroll-margin-top:12px}
+.content h2:first-child{margin-top:0}
+.content h3{font:600 13px/1.3 var(--sans);letter-spacing:.07em;text-transform:uppercase;color:var(--ink-2);margin:28px 0 10px}
+.content p{max-width:68ch;margin:0 0 12px}
+.content ul,.content ol{max-width:68ch;margin:0 0 12px;padding-left:1.3em}
+.content li{margin:0 0 5px}
+.content li::marker{color:var(--ink-3)}
+.lead{font-size:19px;line-height:1.5}
+.small{font-size:15px;color:var(--ink-2)}
+.ref{font:400 12px var(--mono);color:var(--ink-3);white-space:nowrap;margin-left:.35em}
+.id{font:500 12.5px var(--mono);color:var(--ink-3);letter-spacing:.01em}
+.dev{font:400 13.5px/1.5 var(--mono);color:var(--ink-2);background:var(--panel);padding:8px 10px;border-radius:2px;max-width:68ch;margin:6px 0 12px;overflow-wrap:anywhere}
+.dev b{font-weight:500;color:var(--ink)}
+code{font:400 .92em var(--mono);background:var(--panel);padding:1px 4px;border-radius:2px}
+
+/* Items */
+.items{border-bottom:1px solid var(--rule);margin:0 0 18px}
+.item{display:grid;grid-template-columns:4.8em minmax(0,1fr);gap:0 12px;padding:11px 0;border-top:1px solid var(--rule);scroll-margin-top:12px}
+.item>.id{padding-top:4px}
+.item p{margin:0 0 6px}
+.item p:last-child{margin-bottom:0}
+.item ul{margin:4px 0 6px}
+@media (max-width:560px){.item{grid-template-columns:1fr;gap:2px}.item>.id{padding-top:0}}
+
+/* Labels */
+.lab{display:inline-block;font:600 10.5px/1.7 var(--sans);letter-spacing:.07em;text-transform:uppercase;padding:0 6px;border:1px solid var(--accent-line);color:var(--accent);border-radius:2px;vertical-align:middle;margin-left:.3em;white-space:nowrap}
+.lab.neutral{border-color:var(--rule-strong);color:var(--ink-2)}
+
+/* Empty case */
+.empty{border:1px dashed var(--accent-line);background:var(--accent-soft);padding:11px 14px;margin:12px 0;max-width:72ch;border-radius:2px;scroll-margin-top:12px}
+.empty .tag{display:flex;align-items:baseline;gap:10px;font:600 11px var(--sans);letter-spacing:.09em;text-transform:uppercase;color:var(--accent);margin-bottom:4px}
+.empty .tag .id{color:var(--accent);opacity:.8}
+.empty p{margin:0;font-size:16px}
+.empty p+p{margin-top:6px}
+.emptyset .empty{margin:8px 0}
+
+/* Cost note */
+.cost{border-left:2px solid var(--ink);padding:5px 0 5px 14px;margin:14px 0 16px;max-width:68ch;color:var(--ink-2);font-size:16px}
+.cost .eyebrow{margin-bottom:4px}
+.cost p{margin:0}
+.cost p+p{margin-top:6px}
+
+/* Tables */
+.tablewrap{overflow-x:auto;margin:12px 0 20px;max-width:100%}
+table{border-collapse:collapse;font:400 14.5px/1.45 var(--sans);width:100%;min-width:520px}
+th{text-align:left;font-weight:600;background:var(--panel);padding:8px 10px;border-bottom:1px solid var(--rule-strong);font-size:13px;letter-spacing:.02em;vertical-align:bottom}
+td{padding:8px 10px;border-bottom:1px solid var(--rule);vertical-align:top}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+table .id{white-space:nowrap}
+table.narrow{min-width:0}
+
+/* Flows */
+.flow{padding:20px 0 14px;border-top:1px solid var(--rule);scroll-margin-top:12px}
+.flow:last-of-type{border-bottom:1px solid var(--rule);margin-bottom:18px}
+.flow-h{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline;margin-bottom:6px}
+.flow-h h3{font:600 19px/1.25 var(--serif);text-transform:none;letter-spacing:0;color:var(--ink);margin:0}
+.meta{font:400 13.5px var(--sans);color:var(--ink-3)}
+.meta b{font-weight:600;color:var(--ink-2)}
+ol.steps{list-style:none;padding:0;margin:8px 0 10px;counter-reset:s;max-width:70ch}
+ol.steps li{position:relative;padding:5px 0 5px 2.6em;counter-increment:s}
+ol.steps li::before{content:counter(s);position:absolute;left:0;top:7px;width:21px;height:21px;font:500 12px/19px var(--mono);text-align:center;border:1px solid var(--rule-strong);border-radius:50%;color:var(--ink-2)}
+.states{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font:500 13px var(--mono);margin:10px 0 14px}
+.states span{border:1px solid var(--rule-strong);padding:4px 10px;border-radius:2px;background:var(--paper)}
+.states i{font-style:normal;color:var(--ink-3)}
+
+/* Glossary / definition lists */
+dl.gloss{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:7px 18px;font:400 15px/1.45 var(--sans);margin:10px 0 16px;max-width:72ch}
+dl.gloss dt{font-weight:600;white-space:nowrap}
+dl.gloss dd{margin:0;color:var(--ink-2)}
+@media (max-width:480px){dl.gloss{grid-template-columns:1fr;gap:2px 0}dl.gloss dd{margin-bottom:8px}}
+
+/* Legend */
+.legend{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:10px 16px;align-items:start;font:400 15px/1.45 var(--sans);margin:10px 0 18px;max-width:72ch}
+.legend .k{white-space:nowrap}
+@media (max-width:480px){.legend{grid-template-columns:1fr;gap:4px 0}.legend .k{margin-top:8px}}
+
+/* Cover category list */
+.cats{list-style:none;padding:0;margin:8px 0 18px;max-width:72ch;border-top:1px solid var(--rule)}
+.cats li{display:grid;grid-template-columns:2.2em minmax(0,1fr) max-content;gap:0 12px;align-items:baseline;padding:10px 0;border-bottom:1px solid var(--rule)}
+.cats .n{font:500 13px var(--mono);color:var(--ink-3)}
+.cats a{text-decoration:none;font-weight:600}
+.cats a:hover{text-decoration:underline}
+.cats .d{display:block;font:400 14.5px/1.4 var(--sans);color:var(--ink-2);margin-top:2px}
+.cats .st{font:400 13px var(--sans);color:var(--ink-3);white-space:nowrap;font-variant-numeric:tabular-nums}
+.cats .st.e{color:var(--accent)}
+@media (max-width:480px){.cats li{grid-template-columns:2.2em minmax(0,1fr)}.cats .st{grid-column:2}}
+
+/* Bottom navigation */
+.nav{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));display:flex;gap:8px;z-index:20}
+.nav button{width:42px;height:42px;border:1px solid var(--rule-strong);background:var(--paper);border-radius:2px;cursor:pointer;font:500 18px/1 var(--sans);display:grid;place-items:center}
+.nav button:hover{background:var(--panel)}
+.nav button:disabled{opacity:.3;cursor:default}
+.nav button:disabled:hover{background:var(--paper)}
+
+/* Contents dialog */
+dialog{border:1px solid var(--rule-strong);background:var(--paper);color:var(--ink);padding:0;width:min(92vw,600px);max-height:min(86vh,720px);border-radius:2px;font-family:var(--sans)}
+dialog::backdrop{background:rgba(0,0,0,.4)}
+.dl-h{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--rule)}
+.dl-h h2{font:600 15px var(--sans);letter-spacing:.06em;text-transform:uppercase;margin:0}
+.dl-list{list-style:none;margin:0;padding:8px 0;overflow-y:auto;max-height:calc(min(86vh,720px) - 60px)}
+.dl-list li{display:grid;grid-template-columns:2.4em minmax(0,1fr) max-content;gap:0 12px;align-items:baseline;padding:9px 18px}
+.dl-list li:hover{background:var(--panel)}
+.dl-list button{all:unset;cursor:pointer;display:contents}
+.dl-list .n{font:500 13px var(--mono);color:var(--ink-3)}
+.dl-list .t{font-size:16px;font-family:var(--serif)}
+.dl-list .s{font-size:12.5px;color:var(--ink-3);white-space:nowrap}
+.dl-list .s.e{color:var(--accent)}
+.dl-list li.cur .t{font-weight:600}
+
+/* Target flash */
+@keyframes flash{0%{background:var(--accent-soft)}100%{background:transparent}}
+.flash{animation:flash 1.8s ease-out}
+@media (prefers-reduced-motion:reduce){.flash{animation:none}.deck{scroll-behavior:auto}}
+
+/* Print: the deck becomes a sequential document */
+@media print{
+  body{overflow:visible;font-size:11.5pt}
+  .topbar,.nav,dialog{display:none !important}
+  .deck{position:static;display:block;overflow:visible;height:auto}
+  .slide{height:auto;overflow:visible;break-before:page;padding:0 0 24pt}
+  .slide:first-child{break-before:auto}
+  .inner{display:block}
+  .subnav{display:none}
+  .head{margin-bottom:18pt}
+  .empty,.cost,.item,.flow{break-inside:avoid}
+  a{text-decoration:none}
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <span class="doc">TeacherAid v1 Спецификација</span>
+  <span class="now" id="now"></span>
+  <span class="counter" id="counter"></span>
+  <button class="tbtn" id="open-contents" type="button" aria-haspopup="dialog">Содржина</button>
+</header>
+
+<main class="deck" id="deck" aria-label="Specification slides">
+
+<!-- ============ COVER ============ -->
+<section class="slide" id="cover" data-title="Насловна и како да се чита" data-short="Насловна">
+<div class="inner">
+  <div class="head">
+    <span class="eyebrow">Официјална документација · организирана од спецификацијата на функции за v1</span>
+    <h1>TeacherAid v1 Спецификација</h1>
+    <p class="def">Спецификацијата за изградба на TeacherAid верзија еден, реорганизирана во седум категории со цел нетехнички читател да може да ја најде секоја одлука, секое правило и секој пропуст.</p>
+    <div class="stat"><span>Извор од <b>15 септември 2026</b></span><span>Организирано на <b>17 септември 2026</b></span><span>Каталогизирани ставки <b id="c-items">—</b></span><span class="e">Недефинирани случаи <b id="c-empty">—</b></span></div>
+  </div>
+  <nav class="subnav" aria-label="On this slide"></nav>
+  <div class="content">
+
+    <h2 id="cov-source">За изворот</h2>
+    <p class="lead">Сè во овој документ доаѓа од една датотека: <code>feature-spec-v1.md</code>, која се чува во вториот мозок на TeacherAid на <code>Areas/product/</code>. Нејзиното сопствено заглавие ја опишува како креирана на 15 септември 2026 година, тип „area“, статус „draft — not yet integrated into the vault“. Во датотеката не е наведен автор.</p>
+    <p>Спецификацијата вели за себе дека е „напишана за девелоперот кој ќе ја гради“, дека „кажува што постои, како се однесува и што се случува кога ќе падне“, и дека таму каде што не се согласува со постара белешка за производот, спецификацијата е во право.<span class="ref">§1</span></p>
+
+    <h2 id="cov-rules">Како е направен овој документ</h2>
+    <ul>
+      <li><b>Само еден извор.</b> Ништо не е земено од постарите белешки на кои се повикува спецификацијата (features, product-overview, user-flows, technical-architecture, data-and-privacy, the handbook). Таму каде што спецификацијата молчи, пропустот е означен, а не пополнет.</li>
+      <li><b>Без измислување.</b> Две категории — кориснички приказни (user stories) и критериуми за прифаќање (acceptance criteria) — содржат само материјал кој самата спецификација го дефинира на тој начин. Бидејќи таа не дефинира ниту еден, двете се евидентирани како недефинирани случаи (empty cases) со насоки кон најблискиот материјал.</li>
+      <li><b>Секое тврдење може да се следи.</b> Референца како што е <span class="ref">§5.4</span> покажува кон нумерираниот дел од изворната датотека. Ставките носат стабилни идентификатори (FR-12, BR-7, EC-3, UF-8, E-21) за да можат да бидат цитирани на состаноци, тикети и договори.</li>
+      <li><b>Формулирањето го следи изворот.</b> Речениците се преформулирани за општ читател, но фактите, бројките и исклучувањата се на самата спецификација. Македонските термини остануваат на кирилица онаму каде што се вистинското име на нештата.</li>
+    </ul>
+
+    <h2 id="cov-legend">Легенда</h2>
+    <div class="legend">
+      <span class="k"><span class="ref" style="margin:0">§4.2</span></span><span>Делот од изворната спецификација од кој потекнува тврдењето.</span>
+      <span class="k"><span class="lab" style="margin:0">Недефиниран случај / Empty case</span></span><span>Спецификацијата не кажува. Намерно оставено отворено, нумерирано од E-01 па натаму, и собрано во регистарот на последниот слајд.</span>
+      <span class="k"><span class="lab" style="margin:0">Предложено / Proposed</span></span><span>Вредност која спецификацијата ја предлага, но експлицитно ја означува како „сè уште неодлучена, потребно е одобрување“.</span>
+      <span class="k"><span class="lab" style="margin:0">(верификувај / verify)</span></span><span>Сопствена ознака на спецификацијата за факт што сè уште никој не го проверил.</span>
+      <span class="k"><span class="lab neutral" style="margin:0">Не е во v1 / Not in v1</span></span><span>Експлицитно исклучено од спецификацијата, со нејзината причина.</span>
+      <span class="k"><span class="eyebrow" style="display:inline">Цена на оваа одлука / Cost of this decision</span></span><span>Сопствена белешка на спецификацијата за цената што ја нови одреден избор — „не е аргумент против него; туку белешка за никој да не го открива повторно во текот на пилотот“.</span>
+    </div>
+
+    <h2 id="cov-cats">Седумте категории</h2>
+    <ol class="cats" id="cat-list">
+      <li><span class="n">1</span><span><a href="#context">Контекст на производот и бизнисот</a><span class="d">Што е производот, за кого е наменет, што вклучува и исклучува v1, претпоставките на кои се заснова.</span></span><span class="st" data-count="context"></span></li>
+      <li><span class="n">2</span><span><a href="#stories">Кориснички приказни и случаи на употреба</a><span class="d">Како секој тип на корисник би го опишал она што му е потребно. Спецификацијата не содржи вакви приказни.</span></span><span class="st" data-count="stories"></span></li>
+      <li><span class="n">3</span><span><a href="#flows">Кориснички текови</a><span class="d">Чекор-по-чекор секвенците кои ги опишува спецификацијата, од подготовка на час до месечниот извештај.</span></span><span class="st" data-count="flows"></span></li>
+      <li><span class="n">4</span><span><a href="#requirements">Функционални барања</a><span class="d">Што прави и што содржи системот, област по област.</span></span><span class="st" data-count="requirements"></span></li>
+      <li><span class="n">5</span><span><a href="#rules">Бизнис правила</a><span class="d">Фиксните политики и ограничувања, со образложението што спецификацијата го дава за секое од нив.</span></span><span class="st" data-count="rules"></span></li>
+      <li><span class="n">6</span><span><a href="#edge">Гранични случаи и исклучоци</a><span class="d">Невообичаени ситуации и што се случува во секоја од нив — и ситуациите кои спецификацијата не ги опфаќа.</span></span><span class="st" data-count="edge"></span></li>
+      <li><span class="n">7</span><span><a href="#acceptance">Критериуми за прифаќање</a><span class="d">Условите под кои една функција се смета за завршена. Спецификацијата не содржи вакви критериуми.</span></span><span class="st" data-count="acceptance"></span></li>
+      <li><span class="n">A</span><span><a href="#appendix">Апендикс</a><span class="d">Регистарот на сите недефинирани случаи (empty cases), што спецификацијата менува во претходните белешки, и речник.</span></span><span class="st" data-count="appendix"></span></li>
+    </ol>
+
+    <h2 id="cov-nav">Како да се чита овој документ</h2>
+    <p>Секоја категорија е еден слајд. Движете се помеѓу слајдовите со стрелките долу десно, левата и десната стрелка на тастатурата, или копчето „Содржина“ на врвот. Секој слајд се скролува посебно; листата на левата страна на секој слајд скока во рамките на самиот слајд. Адресната лента го зачувува тековниот слајд, па линкот до <code>#rules</code> директно ги отвора бизнис правилата. Печатењето ги подредува слајдовите еден по друг како единствен документ.</p>
+
+  </div>
+</div>
+</section>
+
+<!-- ============ 1. CONTEXT ============ -->
+<section class="slide" id="context" data-title="1 · Контекст на производот и бизнисот" data-short="Контекст">
+<div class="inner">
+  <div class="head">
+    <span class="eyebrow">Категорија 1 од 7</span>
+    <h1>Контекст на производот и бизнисот</h1>
+    <p class="def">Што е TeacherAid v1, каде е наменет да се користи, што е намерно изоставено, и непроверените претпоставки на кои почива целата спецификација.</p>
+    <div class="stat" data-stat></div>
+  </div>
+  <nav class="subnav" aria-label="On this slide"></nav>
+  <div class="content">
+
+    <h2 id="ctx-what">Што е производот</h2>
+    <p class="small">Составено само од сопствените делови на спецификацијата; секоја клаузула го цитира изворот од кој потекнува.</p>
+    <p class="lead">Наставникот го подготвува часот однапред со избирање на тема (единица) од однапред вчитаниот национален е-учебник. Системот генерира вовод (opener), пет до осум поп-ап прашања со одговори и објаснувања, предложен тајмер за секое од нив, и преглед на ревизија — на македонски јазик, со можност за целосно уредување.<span class="ref">§4.1</span></p>
+    <p>На часот, наставникот го води предавањето од лаптоп со два прозорци во прелистувачот: приказ за класот на проекторот и приватна конзола на екранот на лаптопот.<span class="ref">§5.2</span> Учениците се приклучуваат од нивните сопствени телефони со скенирање на QR-код кој се менува на секои 30 секунди, најавени со нивната училишна е-пошта.<span class="ref">§5.4</span> Заклучувањето на фокусот (focus lock) — нативна телефонска апликација која ги блокира апликациите што го одвлекуваат вниманието — е задолжително; без тоа, ученикот не може да се приклучи.<span class="ref">§6.1</span></p>
+    <p>Часот започнува со предвидување или дебата: учениците гласаат, потоа пишуваат една линија на образложение, и добиваат поени за образложението без оглед на тоа дали било точно или погрешно.<span class="ref">§5.5</span> За време на предавањето, наставникот активира поп-ап прашања со тајмери во моменти по свој избор.<span class="ref">§5.6</span> Ученикот може да му испрати прашање на наставникот кое соучениците никогаш нема да видат од кого е испратено.<span class="ref">§5.7</span> Поени, значки и табели со резултати (leaderboards) по семестар се активни во текот на целиот процес.<span class="ref">§13</span></p>
+    <p>Кога наставникот ќе притисне на копчето за крај (End), поените се пресметуваат, присуството се запишува, се прикажува листа на отсутни ученици форматирана за копирање во e-Дневник, и се прегледуваат најчесто утнатите прашања.<span class="ref">§5.10, §8.1, §8.2</span> Потоа, наставникот може да испрати изборен сет за вежбање составен од утнатите прашања на тој конкретен клас,<span class="ref">§8.3</span> и ги гледа присуството, поените и резултатите по темите за секој ученик на контролната табла.<span class="ref">§8.4, §9.1</span> Училишниот администратор раководи со класовите и списоците (ростерите) и гледа кои наставници ја користат апликацијата;<span class="ref">§9.2</span> директорот добива месечен извештај во PDF формат по е-пошта и никогаш не се најавува во системот.<span class="ref">§9.3</span></p>
+
+    <h2 id="ctx-scope">Опсег на v1</h2>
+    <div class="items">
+      <div class="item" id="ctx-1"><span class="id">CTX-1</span><div><p><b>Каде.</b> Средни училишта во Северна Македонија — гимназија, стручно и уметничко.<span class="ref">§2</span></p></div></div>
+      <div class="item" id="ctx-2"><span class="id">CTX-2</span><div><p><b>Пилот предмети.</b> Историја, електроника и физика. За овие три предмети наставната програма и е-учебниците се правилно вчитани. Секој друг предмет работи врз основа на сопствениот внес на наставникот, без поврзаност со наставната програма.<span class="ref">§2</span></p></div></div>
+      <div class="item" id="ctx-3"><span class="id">CTX-3</span><div><p><b>Јазик на интерфејсот.</b> Само македонски.<span class="ref">§2</span></p></div></div>
+      <div class="item" id="ctx-4"><span class="id">CTX-4</span><div><p><b>Големина на класот (сесијата).</b> Спецификацијата работи според претпоставката за „сесија со најмногу 35 ученици“.<span class="ref">§2</span></p></div></div>
+      <div class="item" id="ctx-5"><span class="id">CTX-5</span><div><p><b>Само теоретски часови.</b> Практичната и лабораториската настава (практична настава) се исклучени: прашање со тајмер од 20 секунди не му одговара на ученик со лемило во двете раце.<span class="ref">§2</span></p></div></div>
+    </div>
+
+    <h3>Експлицитно надвор од v1</h3>
+    <p class="small">Табела за исклучувања на самата спецификација, со наведените причини. Ова се одлуки, а не пропусти.</p>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Не е во v1</th><th>Наведена причина</th></tr></thead>
+      <tbody>
+        <tr><td>Универзитети</td><td>Нема директор, нема задолжително присуство, предавања од над 90 минути, амфитеатри кои далеку ја надминуваат претпоставката од 35 ученици, и студенти кои се полнолетни — така што задолжителното заклучување на фокусот нема институционален мандат. „Втор тип на производ.“</td></tr>
+        <tr><td>Практична / лабораториска настава</td><td>Прашање со тајмер од 20 секунди не одговара на практична работа. Само теоретски часови.</td></tr>
+        <tr><td>Национална табела на резултати</td><td>Без значење во рамките на само три пилот училишта.</td></tr>
+        <tr><td>Низи на континуитет (Streaks)</td><td>Сè уште непотврдено во реална училница.</td></tr>
+        <tr><td>Слободен наставнички четбот</td><td>Заменет со фиксни контроли за уредување со еден допир (§4.6).</td></tr>
+        <tr><td>Синхронизација со e-Дневник</td><td>Зависи од МОН. „Никогаш не го ветувајте.“</td></tr>
+        <tr><td>Интерфејс на албански јазик</td><td>По потврдувањето на македонскиот корпус.</td></tr>
+        <tr><td>Распоред на часови</td><td>Намерно одбиено (§5.1).</td></tr>
+        <tr><td>Апликација или најава за родители</td><td>Родителите се контактираат преку училиштето, на хартија.</td></tr>
+        <tr><td>Дополнително време за одреден ученик</td><td>Евидентирано како познато ограничување (§10.4).</td></tr>
+        <tr><td>Самостоен извоз и бришење на податоци</td><td>Рачно, од страна на поддршката (§11.5).</td></tr>
+        <tr><td>Префрлање на клас на друг наставник</td><td>Нема решение во v1 за породилно отсуство, боледување или заминување на наставникот.</td></tr>
+        <tr><td>Втор наставник на ист клас</td><td>Без ко-настава (co-teaching), без замени.</td></tr>
+        <tr><td>Наплата во самата апликација</td><td>Цените се ревидираат. Целосно надвор од опсегот.</td></tr>
+      </tbody>
+    </table></div>
+
+    <aside class="cost"><span class="eyebrow">Цена на оваа одлука — практична настава</span><p>Во средните технички училишта, голем дел од часовите се практична настава. Нивното структурно исклучување го преполовува бројот на часови по наставник, што е клучниот параметар за задржување (retention metric) кој според белешката за дистрибуција бара интервенција доколку падне под два неделно. Очекувајте бројките за користење во пилот фазата да изгледаат полошо отколку што производот навистина заслужува, па затоа мерете ги резултатите по <i>теоретски</i> час наместо по вкупен број часови.<span class="ref">§2</span></p></aside>
+    <aside class="cost"><span class="eyebrow">Цена на оваа одлука — пилот предмети</span><p>Историјата, електрониката и физиката упатуваат на стручно или техничко училиште. Секоја деловна белешка во сефот на податоци претпоставува почетна точка (beachhead) во приватна гимназија. Едно од овие две тврдења е застарено; тоа е деловна одлука, а не производна, но развојот не би требало да претпоставува само гимназија.<span class="ref">§2</span></p></aside>
+
+    <h2 id="ctx-who">Кој го користи</h2>
+    <p>Три типа кориснички сметки и еден без корисничка сметка. Целосните овластувања за секој од нив се наведени во <a href="#fr-roles">Функционални барања</a>.</p>
+    <div class="items">
+      <div class="item" id="ctx-6"><span class="id">CTX-6</span><div><p><b>Наставник</b> — се најавува со е-пошта и лозинка; креира и води часови; ги гледа само сопствените класови.<span class="ref">§3.1</span></p></div></div>
+      <div class="item" id="ctx-7"><span class="id">CTX-7</span><div><p><b>Ученик</b> — се најавува со училишната е-пошта, која претставува негов идентитет за присуство, поени, индикатори за фокус и резултати по тема.<span class="ref">§3.2</span></p></div></div>
+      <div class="item" id="ctx-8"><span class="id">CTX-8</span><div><p><b>Училишен администратор</b> — училишниот секретар или ИТ лице; управува со класовите, списоците и персоналот; гледа дали се одржува настава, но никогаш не ги гледа одговорите на учениците.<span class="ref">§3.3</span></p></div></div>
+      <div class="item" id="ctx-9"><span class="id">CTX-9</span><div><p><b>Директор</b> — нема корисничка сметка. Добива месечен извештај по е-пошта. „Ова е одлучено и останува така.“<span class="ref">§3.4</span></p></div></div>
+    </div>
+
+    <h2 id="ctx-why">Деловни образложенија кои ги наведува спецификацијата</h2>
+    <p class="small">Спецификацијата објаснува зошто некои од функциите постојат од деловен аспект. Тие објаснувања се собрани тука, додека самите функции се прикажани на следните слајдови.</p>
+    <div class="items">
+      <div class="item" id="ctx-10"><span class="id">CTX-10</span><div><p><b>Училишната библиотека</b> (зачуваните часови на секој наставник се видливи за колегите од истото училиште) е „она што прави лиценцата за целиот персонал да се исплати веднаш: работата на еден мотивиран наставник го збогатува целото училиште, наместо педесет и пет луѓе поединечно да ги плаќаат истите почетни трошоци за поставување на системот.“ Ова е воедно и „првиот безбеден чекор кон националниот корпус означен како заштитен бедем (moat)“ во белешката за конкуренцијата.<span class="ref">§4.7</span></p></div></div>
+      <div class="item" id="ctx-11"><span class="id">CTX-11</span><div><p><b>Еден час за повеќе класови</b> е „она што ја прави реална, а не само посакувана, бројката од околу 400 генерирања по наставник годишно наведена во белешката за структурата на трошоците“, и му овозможува на наставникот да спореди како поминале два различни класа на истото прашање.<span class="ref">§4.5</span></p></div></div>
+      <div class="item" id="ctx-12"><span class="id">CTX-12</span><div><p><b>Потсетникот (nudge)</b> (тивка сугестија на конзолата кога не е поставено прашање неколку минути) го заштитува наставникот кој се внел во предавањето — „начинот на неуспех кој создава празна контролна табла и прави училиштето да изгледа неактивно“.<span class="ref">§5.6</span></p></div></div>
+      <div class="item" id="ctx-13"><span class="id">CTX-13</span><div><p><b>Прегледот на користење за администраторот</b> е „раното предупредување за училиште во кое само еден наставник-лидер е активен“, што „некој во самата зграда треба да го види пред месецот за обнова на лиценцата, а не после тоа“.<span class="ref">§9.2</span></p></div></div>
+      <div class="item" id="ctx-14"><span class="id">CTX-14</span><div><p><b>Извештајот за директорот</b> е поделен на прва страница што може да се проследува и втора страница наменета само за директорот, бидејќи „училиште рангирано на деветто место од дванаесет нема да ја проследи страницата на која го пишува тоа“, а во пилот фаза од дванаесет училишта, повеќето се надвор од првите неколку најдобри.<span class="ref">§9.3</span></p></div></div>
+      <div class="item" id="ctx-15"><span class="id">CTX-15</span><div><p><b>Дневникот за пристап на персоналот (staff-access log)</b> е „најубедливиот поединечен аргумент за да му се прикаже на директорот во однос на прашањето за податоците“.<span class="ref">§11.4</span></p></div></div>
+      <div class="item" id="ctx-16"><span class="id">CTX-16</span><div><p><b>Листата на отсутни ученици</b> е „најмалата функција во спецификацијата и веројатно моментот кога наставникот за првпат ќе почувствува дека производот му заштедил време и напор“.<span class="ref">§8.1</span></p></div></div>
+      <div class="item" id="ctx-17"><span class="id">CTX-17</span><div><p><b>Легитимноста пред МОН</b> (преку расчистени авторски права за е-учебниците) „е главната одбрана против Curipod“ — единствениот конкурент кој спецификацијата го споменува по име.<span class="ref">§4.1</span></p></div></div>
+      <div class="item" id="ctx-18"><span class="id">CTX-18</span><div><p><b>Воведување (Onboarding) во голем обем.</b> Водениот прв час „мора да профункционира педесет и пет пати во една недела без присуство на основач во училницата, бидејќи целиот наставен кадар доаѓа одеднаш, наместо поединечни доброволци еден по еден“.<span class="ref">§10.2</span></p></div></div>
+      <div class="item" id="ctx-19"><span class="id">CTX-19</span><div><p><b>Параметарот за задржување (retention metric)</b> кој го наведува спецификацијата е бројот на часови по наставник, со интервенција доколку падне под два неделно; со оглед на тоа што практичната настава е исклучена, тој треба да се мери по теоретски час.<span class="ref">§2</span></p></div></div>
+    </div>
+
+    <h2 id="ctx-legal">Блокирачки правен предмет</h2>
+    <div class="items">
+      <div class="item" id="ctx-20"><span class="id">CTX-20</span><div><p>Националните е-учебници се објавени од страна на МОН и напишани од именувани автори. Нивното централно претходно вчитување (pre-loading) во комерцијален производ „е прашање на авторски права кое мора да се реши со МОН/БРО <b>пред да се пушти оваа функција</b> — заедно со ДПА (договорот за обработка на податоци) и известувањето за приватност кои се веќе буџетирани за адвокат“. Спецификацијата го нарекува ова „ставка која не смее да се остави за понатаму под пристапот пушти-па-види“ и „тип на работа што лесно станува медиумска сензација доколку биде откриена подоцна“.<span class="ref">§4.1</span></p></div></div>
+    </div>
+
+    <h2 id="ctx-assume">Отворени претпоставки на кои почива спецификацијата</h2>
+    <p>Спецификацијата наведува шест непроверени факти и ги посочува последиците доколку некој од нив е погрешен. Претпоставката А е наречена „најголемата поединечна непроверена претпоставка во спецификацијата“.<span class="ref">§3.2, §14</span></p>
+    <div class="tablewrap"><table>
+      <thead><tr><th>#</th><th>Претпоставка</th><th>Што се урива ако е погрешна</th><th>Потребен доказ</th></tr></thead>
+      <tbody>
+        <tr><td><span class="id">A</span></td><td>Секое целно училиште отвора е-пошти за учениците</td><td>Целосниот концепт за најава. Ниту еден ученик не може да се приклучи.</td><td>Да се потврди со пилот училиштето пред почетокот на изградбата <span class="lab">(верификувај / verify)</span></td></tr>
+        <tr><td><span class="id">B</span></td><td>Авторските права за е-учебниците можат да се расчистат со МОН/БРО</td><td>Примарниот влез за планирање и аргументот за легитимност</td><td>Писмен одговор пред да се испорача функцијата</td></tr>
+        <tr><td><span class="id">C</span></td><td>Класот ќе одвои 45 минути за час за поставување на системот пред да види некаков бенефит</td><td>Адаптација на системот; првиот впечаток е сесија за техничка поддршка</td><td>Прашајте го директно пилот наставникот</td></tr>
+        <tr><td><span class="id">D</span></td><td>Задолжителното заклучување на фокусот нема да предизвика поплаки од родителите какви што одбегнуваше стариот концепт</td><td>Пилотот и одговорот наменет за родителите</td><td>Пилот фаза; известувањето за родителите да се прегледа пред првата недела</td></tr>
+        <tr><td><span class="id">E</span></td><td>Наставниците и родителите прифаќаат да се зачувуваат податоците за оценување на секој ученик</td><td>ДПА и ставот дека „апликацијата никогаш никого не оценува“</td><td>Да се праша наставникот-советник и претставник на родителите</td></tr>
+        <tr><td><span class="id">F</span></td><td>Apple навремено ќе го додели правото за Family Controls</td><td>Ниту еден ученик со iOS систем нема да може да пристапи</td><td>Барањето да се започне веднаш; потребни се недели</td></tr>
+      </tbody>
+    </table></div>
+
+    <h2 id="ctx-empty">Недефинирани случаи во оваа категорија</h2>
+    <div class="emptyset">
+      <div class="empty" id="e-01"><span class="tag"><span class="id">E-01</span>Недефиниран случај · големина на пилотот</span><p>Спецификацијата споменува „три пилот училишта“ (§2, ред за националната табела на резултати) и „пилот фаза со дванаесет училишта“ (§9.3). Овие две бројки не се усогласени во текстот.</p></div>
+      <div class="empty" id="e-02"><span class="tag"><span class="id">E-02</span>Недефиниран случај · пилот училиштето</span><p>Повикувањата на „пилот училиштето“, „пилот наставникот“ и „наставникот-советник“ (§14) се присутни, но тие никогаш не се именувани.</p></div>
+      <div class="empty" id="e-03"><span class="tag"><span class="id">E-03</span>Недефиниран случај · цена и лиценца</span><p>„Цените се ревидираат. Целосно надвор од опсегот“ (§2). Се споменува „лиценца за целиот персонал“ (§4.7), но без детални услови.</p></div>
+      <div class="empty" id="e-04"><span class="tag"><span class="id">E-04</span>Недефиниран случај · временска рамка</span><p>Никаде во спецификацијата не се наведени датуми за развој, пилот фаза или за официјално пуштање во употреба.</p></div>
+      <div class="empty" id="e-05"><span class="tag"><span class="id">E-05</span>Недефиниран случај · кој го гради производот</span><p>Документот е „напишан за девелоперот кој го гради“ (§1). Не е именуван девелопер, развоен тим или структура на компанијата.</p></div>
+      <div class="empty" id="e-06"><span class="tag"><span class="id">E-06</span>Недефиниран случај · пазар и конкуренција</span><p>Само Curipod е споменат по име, однаш, како конкурент од кој нè штити легитимноста со МОН (§4.1). Во спецификацијата не се појавуваат податоци за големината на пазарот, позиционирањето или други конкуренти.</p></div>
+      <div class="empty" id="e-07"><span class="tag"><span class="id">E-07</span>Недефиниран случај · автор</span><p>Заглавието на датотеката содржи датум на креирање, тип и статус. Во него не е евидентирано кој го напишал документот.</p></div>
+      <div class="empty" id="e-08"><span class="tag"><span class="id">E-08</span>Недефиниран случај · критериуми за успех за v1</span><p>Единствениот метар (параметар) кој се цитира во спецификацијата е бројот на часови по наставник, со интервенција доколку падне под два неделно (§2), преземен од друга белешка. Не се поставени конкретни таргети за v1 — големина на пилотот, искористеност, задоволство или обнова на лиценцата.</p></div>
+    </div>
+
+  </div>
+</div>
+</section>
+<!-- ============ 2. USER STORIES ============ -->
+<section class="slide" id="stories" data-title="2 · Кориснички приказни и случаи на употреба" data-short="Кориснички приказни" data-empty-slide="1">
+<div class="inner">
+  <div class="head">
+    <span class="eyebrow">Категорија 2 од 7</span>
+    <h1>Кориснички приказни и случаи на употреба</h1>
+    <p class="def">Кратки изјави за тоа што му е потребно на секој тип на корисник и зошто („Како наставник, сакам... со цел да...“), и конкретни сценарија за употреба на производот.</p>
+    <div class="stat" data-stat></div>
+  </div>
+  <nav class="subnav" aria-label="On this slide"></nav>
+  <div class="content">
+
+    <h2 id="st-status">Статус: недефинирано</h2>
+    <div class="empty" id="e-09"><span class="tag"><span class="id">E-09</span>Недефиниран случај · кориснички приказни (user stories)</span><p>Спецификацијата не содржи кориснички приказни. Ниту една реченица во неа не е во форма „како [улога], сакам [нешто] со цел да [исход]“, и ниту еден дел не е означен како приказни или барања-од-страна-на-корисникот.</p><p>Според правилата усвоени за овој документ, ниту една приказна не е изведена во оваа фаза. Нивното изведување би значело донесување одлуки, во име на тимот, за тоа какви се мотивите на секоја улога — а тоа е одлука која спецификацијата не ја донесува.</p></div>
+    <div class="empty" id="e-10"><span class="tag"><span class="id">E-10</span>Недефиниран случај · случаи на употреба (use cases)</span><p>Спецификацијата не содржи дел дефиниран како случаи на употреба (именувани сценарија со актер, цел, предуслови и главен тек). Сепак, секвенцијално однесување се појавува — тоа е евидентирано на слајдот <a href="#flows">Кориснички текови</a> како текови (flows), бидејќи така ги претставува самата спецификација.</p></div>
+    <div class="empty" id="e-11"><span class="tag"><span class="id">E-11</span>Недефиниран случај · персони (personas)</span><p>Освен четирите улоги (наставник, ученик, училишен администратор, директор), спецификацијата не опишува никакви персони. Најмногу детали што ги нуди се дека администраторот е „училишниот секретар или ИТ лице“ (§3.3) и дека целиот персонал на училиштето пристигнува одеднаш, а не поединечни доброволци еден по еден (§10.2).</p></div>
+
+    <h2 id="st-nearest">Што содржи спецификацијата наместо тоа, и каде се наоѓа во овој документ</h2>
+    <p>Читателот на кој му се потребни кориснички приказни ќе го најде суровиот материјал на три места. Истиот е зачуван во категоријата во која спецификацијата го дефинира, а не е преформулиран тука како приказни.</p>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Што содржи спецификацијата</th><th>Каде во изворот</th><th>Каде во овој документ</th></tr></thead>
+      <tbody>
+        <tr><td>Листи на дозволени („Може“) и недозволени („Не може“) дејства за наставникот, ученикот и училишниот администратор — што секоја улога има право да прави</td><td>§3.1, §3.2, §3.3</td><td><a href="#fr-roles">Функционални барања · Кориснички сметки и улоги</a></td></tr>
+        <tr><td>Секвенцијално однесување: креирање час, приклучување, вовед (opener), поп-ап прашања, завршување на час, сетови за вежбање, onboarding, извештај, промени на ростери</td><td>§4.1, §5.3–§5.10, §8, §9.3, §10, §12</td><td><a href="#flows">Кориснички текови</a></td></tr>
+        <tr><td>Ситуации и како се решаваат: лошо прашање, прекината врска, ученик без телефон, заборавено завршување (End)</td><td>§5.8, §5.9, §6.4, §7.1, §5.10</td><td><a href="#edge">Гранични случаи и исклучоци</a></td></tr>
+        <tr><td>Мотивирачки реченици кои звучат како делот „со цел да“ на една приказна — „наставникот повторно внесува четири имиња наместо да проверува триесет“; „на директорот кој има потреба од бројките од минатиот месец за општината не мора никого да прашува“</td><td>§8.1, §9.3</td><td>Зачувано со барањето што го оправдуваат: <a href="#fr-53">FR-53</a>, <a href="#fr-59">FR-59</a></td></tr>
+        <tr><td>Деловни причини за функциите (библиотека, потсетник-nudge, преглед на користење, поделба на извештајот)</td><td>§4.5, §4.7, §5.6, §9.2, §9.3, §11.4</td><td><a href="#ctx-why">Контекст · Деловно образложение</a></td></tr>
+      </tbody>
+    </table></div>
+
+    <h2 id="st-fill">За да се пополни оваа категорија</h2>
+    <p>Тимот ќе мора самиот да ги напише приказните. Улогите се фиксни (§3), можностите по улога се фиксни (§3.1–§3.3), а тековите на следниот слајд ја даваат низата — така што единствениот дел што недостасува е наведената мотивација за секоја приказна, која мора да дојде од тимот или од разговорите со наставниците и директорите на кои се повикува спецификацијата (§14).</p>
+
+  </div>
+</div>
+</section>
+
+<!-- ============ 3. USER FLOWS ============ -->
+<section class="slide" id="flows" data-title="3 · Кориснички текови" data-short="Кориснички текови">
+<div class="inner">
+  <div class="head">
+    <span class="eyebrow">Категорија 3 од 7</span>
+    <h1>Кориснички текови</h1>
+    <p class="def">Чекор-по-чекор секвенците кои ги опишува спецификацијата: кој ја започнува секоја од нив, што ја активира, чекорите по наведениот редослед, и крајниот производ. Вклучени се само секвенци кои спецификацијата навистина детално ги разработува.</p>
+    <div class="stat" data-stat></div>
+  </div>
+  <nav class="subnav" aria-label="On this slide"></nav>
+  <div class="content">
+
+    <h2 id="uf-prepare">Подготовка на час</h2>
+
+    <div class="flow" id="uf-1">
+      <div class="flow-h"><span class="id">UF-1</span><h3>Креирање час од е-учебникот</h3><span class="meta"><b>Кој:</b> наставник · <b>Извор:</b> §4.1</span></div>
+      <p class="small">Ова е примарниот начин на кој се креира час. Спецификацијата го опишува како „два допира“ плус една изборна реченица.</p>
+      <ol class="steps">
+        <li>Наставникот го избира предметот, годината и наставната единица (тема) од однапред вчитаната содржина на е-учебникот.</li>
+        <li>По желба, наставникот додава една реченица за нагласување — примерите од спецификацијата се „фокус на испитното прашање“ и „со ова имаа потешкотии минатата година“.</li>
+        <li>Процесот на генерирање враќа вовед (opener), 5–8 поп-ап прашања со одговори и објаснувања, предложен тајмер за секое од нив, и резиме за ревизија. Сè е на македонски јазик и сè може да се уредува.</li>
+        <li>Наставникот ги прегледува материјалите, ги уредува директно (inline) или применува фино уредување со еден допир (<a href="#uf-3">UF-3</a>), па ги зачувува.</li>
+      </ol>
+      <p><b>Резултат:</b> зачуван час — објект со можност за повеќекратна употреба кој може да се активира многу пати (§4) и е видлив за колегите во истото училиште преку библиотеката (<a href="#uf-4">UF-4</a>).</p>
+      <p class="small">TeacherAid однапред ги вчитува и ги дели на делови (chunks) е-учебниците за трите пилот предмети, по наставна единица. Наставниците не ги прикачуваат самите.<span class="ref">§4.1</span></p>
+    </div>
+
+    <div class="flow" id="uf-2">
+      <div class="flow-h"><span class="id">UF-2</span><h3>Креирање час без вчитан учебник — алтернативен пат (fallback)</h3><span class="meta"><b>Кој:</b> наставник · <b>Извор:</b> §4.1</span></div>
+      <p>„Внеси три реченици“ сега е алтернативниот пат, кој се користи кога нема вчитан учебник за тој предмет, или кога наставникот сака нешто надвор од наставната програма. Спецификацијата вели дека ова „сè уште работи“, но „веќе не е главната привлечност на производот“. Не се опишани понатамошни чекори.</p>
+    </div>
+
+    <div class="flow" id="uf-3">
+      <div class="flow-h"><span class="id">UF-3</span><h3>Фино уредување на генерираниот час</h3><span class="meta"><b>Кој:</b> наставник · <b>Извор:</b> §4.6</span></div>
+      <p>Кај генерираниот час постои фиксен ред со акции со еден допир. Наставникот допира една од нив:</p>
+      <ul>
+        <li>Полесно</li>
+        <li>Потешко</li>
+        <li>Повеќе прашања</li>
+        <li>Направи го воведот дебата (или предвидување)</li>
+        <li>Кратки тајмери</li>
+      </ul>
+      <p>Нема слободен текст-разговор (chat). Овие акции ги опфаќаат структурните промени кои директното уредување не може да ги направи — „претворањето на предвидувањето во дебата не е едноставно менување на некое поле“.</p>
+    </div>
+
+    <div class="flow" id="uf-4">
+      <div class="flow-h"><span class="id">UF-4</span><h3>Повторно користење на час од колега преку училишната библиотека</h3><span class="meta"><b>Кој:</b> наставник · <b>Извор:</b> §4.7</span></div>
+      <ol class="steps">
+        <li>Наставникот го гледа часот кој друг наставник од истото училиште го зачувал.</li>
+        <li>Го копира во сопствената корисничка сметка.</li>
+        <li>Ја уредува сопствената копија. Оригиналот никогаш не се менува преку копијата.</li>
+      </ol>
+      <p class="small">Без национална библиотека, без споделување помеѓу различни училишта, без јавни часови во v1.</p>
+    </div>
+
+    <div class="flow" id="uf-5">
+      <div class="flow-h"><span class="id">UF-5</span><h3>Водење на еден час за повеќе различни класови</h3><span class="meta"><b>Кој:</b> наставник · <b>Извор:</b> §4.5</span></div>
+      <p>Наставникот го води истиот час за II-1, II-2 и II-3. Секое водење е сопствена сесија со сопствено присуство, одговори, поени и резултати. Уредувањето на часот помеѓу две предавања влијае на подоцнежните сесии, а не на записите од претходните.</p>
+    </div>
+
+    <h2 id="uf-live">Сесија во живо</h2>
+
+    <div class="flow" id="uf-6">
+      <div class="flow-h"><span class="id">UF-6</span><h3>Поставување на училницата: два прозорци</h3><span class="meta"><b>Кој:</b> наставник · <b>Извор:</b> §5.2</span></div>
+      <p>Наставникот го води часот од лаптоп со два прозорци во прелистувачот. <b>Приказот за класот (class view)</b> се проектира; <b>конзолата</b> останува на екранот на лаптопот и никогаш не се проектира. Приказот за класот мора да може да се отвори како посебен прозорец со еден клик, „а не со влечење (drag)“ — поставувањето на проширен екран (extended display) додека чекаат триесет ученици е означено како реална пречка (friction point), и воведувањето (<a href="#uf-18">UF-18</a>) мора експлицитно да го опфати тоа.</p>
+    </div>
+
+    <div class="flow" id="uf-7">
+      <div class="flow-h"><span class="id">UF-7</span><h3>Сесијата, состојба по состојба</h3><span class="meta"><b>Кој:</b> наставникот ја менува состојбата · <b>Извор:</b> §5.3</span></div>
+      <div class="states"><span>lobby</span><i>→</i><span>opener</span><i>→</i><span>teaching</span><i>→</i><span>review</span><i>→</i><span>ended</span></div>
+      <p>Наставникот ја менува состојбата. Серверот е единствениот авторитет за времето (тајмерот) за секое одбројување; телефоните и приказот за класот само го прикажуваат (render-ираат) истото.</p>
+    </div>
+
+    <div class="flow" id="uf-8">
+      <div class="flow-h"><span class="id">UF-8</span><h3>Приклучување на ученик</h3><span class="meta"><b>Кој:</b> ученик · <b>Извор:</b> §5.4, §3.2, §6.1</span></div>
+      <p class="small">Предуслови наведени на друго место: ученикот е запишан во класот (§3.2) и го авторизирал заклучувањето на фокусот (§6.1).</p>
+      <ol class="steps">
+        <li>Приказот за класот покажува QR-код и краток код. QR-кодот се менува на секои 30 секунди.</li>
+        <li>Ученикот го скенира кодот.</li>
+        <li>Ученикот се автентицира преку неговата сесија од училишната е-пошта.</li>
+        <li>Ученикот се приклучува и се означува како присутен, со временска ознака (timestamp). Доцното приклучување се евидентира со временска ознака како доцнење.</li>
+      </ol>
+      <p class="small">Присуството тука е сопствен запис на TeacherAid. Официјалното присуство останува во e-Дневник (§8.1).</p>
+    </div>
+
+    <div class="flow" id="uf-9">
+      <div class="flow-h"><span class="id">UF-9</span><h3>Вовед (opener) — предвидување (претпоставено)</h3><span class="meta"><b>Кој:</b> наставник и ученици · <b>Извор:</b> §5.5</span></div>
+      <ol class="steps">
+        <li>Се појавува прашање од типот „Што ќе се случи ако...?“ со 3–4 понудени опции.</li>
+        <li>Учениците гласаат.</li>
+        <li>Учениците пишуваат една линија со образложение.</li>
+        <li>На приказот за класот се прикажуваат столпчиња во живо со резултатите од гласањето.</li>
+        <li>Откривање на точниот одговор.</li>
+      </ol>
+      <p>Поени за точен одговор; поени за давање образложение, точно или погрешно. Образложенијата му се прикажуваат на класот без имиња; конзолата на наставникот ги прикажува со имиња.</p>
+    </div>
+
+    <div class="flow" id="uf-10">
+      <div class="flow-h"><span class="id">UF-10</span><h3>Вовед (opener) — дебата</h3><span class="meta"><b>Кој:</b> наставник и ученици · <b>Извор:</b> §5.5</span></div>
+      <ol class="steps">
+        <li>Се прикажува тврдење.</li>
+        <li>Учениците избираат страна и даваат една причина (образложение).</li>
+        <li>Наставник чита две причини гласно и го остава класот да дискутира.</li>
+      </ol>
+    </div>
+
+    <div class="flow" id="uf-11">
+      <div class="flow-h"><span class="id">UF-11</span><h3>Активирање на поп-ап прашање</h3><span class="meta"><b>Кој:</b> наставник · <b>Извор:</b> §5.6</span></div>
+      <ol class="steps">
+        <li>Наставникот допира еднаш на конзолата.</li>
+        <li>Прашањето стигнува на секој телефон со активиран тајмер што одбројува.</li>
+      </ol>
+      <p>Поп-ап прашањата се активираат од страна на наставникот, никогаш не се однапред планирани со распоред — „непредвидливоста е поентата“. Наставникот исто така може да активира и ad-hoc прашање („брзо: да или не?“) без претходна подготовка. Доколку поминат неколку минути без да се активира прашање, конзолата прикажува дискретна сугестија — без модален прозорец, без звук.</p>
+    </div>
+
+    <div class="flow" id="uf-12">
+      <div class="flow-h"><span class="id">UF-12</span><h3>Прескокнување на лошо прашање</h3><span class="meta"><b>Кој:</b> наставник · <b>Извор:</b> §5.8</span></div>
+      <ol class="steps">
+        <li>Наставникот го прескокнува прашањето за време на сесијата.</li>
+        <li>Тоа се отстранува од сесијата и никој не добива поени за него.</li>
+        <li>Приказот за класот јасно го кажува тоа, за учениците да знаат дека не се пресметува.</li>
+      </ol>
+      <p>Нема менување на текстот во живо. Наставникот го поправа часот потоа, во копијата која повторно ја користи.</p>
+    </div>
+
+    <div class="flow" id="uf-13">
+      <div class="flow-h"><span class="id">UF-13</span><h3>Ученик поставува прашање за кое класот нема да види од кого е</h3><span class="meta"><b>Кој:</b> ученик, потоа наставник · <b>Извор:</b> §5.7</span></div>
+      <ol class="steps">
+        <li>Во кој било момент од часот, ученикот испраќа прашање. Стандардното ограничување е 3 прашања по ученик за еден час.</li>
+        <li>Тоа пристигнува во инбоксот на конзолата на наставникот, со името на испраќачот. Инбоксот постои само на конзолата.</li>
+        <li>Наставникот одговара на него во блокот за ревизија (<a href="#uf-14">UF-14</a>).</li>
+      </ol>
+      <p>Никој од соучениците никогаш не гледа кој го испратил.</p>
+    </div>
+
+    <div class="flow" id="uf-14">
+      <div class="flow-h"><span class="id">UF-14</span><h3>Блок за ревизија</h3><span class="meta"><b>Кој:</b> наставник · <b>Извор:</b> §8.2</span></div>
+      <p>Приказот за класот ги прикажува најчесто утнатите прашања, рангирани од најлошото нагоре, и анонимните прашања на кои наставникот треба да им одговори гласно. Наставникот го дава објаснувањето — без повторно објаснување од вештачка интелигенција, без генерирана содржина за дополнителна настава; „ништо непрегледано не стигнува до учениците“.</p>
+    </div>
+
+    <div class="flow" id="uf-15">
+      <div class="flow-h"><span class="id">UF-15</span><h3>Завршување на сесијата</h3><span class="meta"><b>Кој:</b> наставник · <b>Извор:</b> §5.10, §8.1</span></div>
+      <ol class="steps">
+        <li>Наставникот притиска на копчето за крај (End). Нема автоматско затворање.</li>
+        <li>Поените се пресметуваат и финализираат.</li>
+        <li>Присуството се запишува.</li>
+        <li>Се појавува листата на отсутни ученици: само имињата на учениците кои отсуствувале, форматирани за лесно копирање во е-Дневник.</li>
+        <li>Часот се архивира.</li>
+      </ol>
+      <p>Наставникот ги препишува имињата на отсутните во е-Дневник — „четири имиња наместо да проверува триесет“. TeacherAid не пишува во е-Дневник и не го заменува.</p>
+    </div>
+
+    <h2 id="uf-after">По часот</h2>
+
+    <div class="flow" id="uf-16">
+      <div class="flow-h"><span class="id">UF-16</span><h3>Испраќање сет за вежбање</h3><span class="meta"><b>Кој:</b> наставник, потоа ученици · <b>Извор:</b> §8.3</span></div>
+      <ol class="steps">
+        <li>По завршувањето на часот, наставникот може да испрати изборен сет за вежбање на класот.</li>
+        <li>Сетот се составува автоматски од утнатите прашања од таа конкретна сесија — без ново генерирање, без трошоци, без непрегледана содржина.</li>
+        <li>Учениците го решаваат доброволно; со тоа се освојуваат поени.</li>
+        <li>Наставникот гледа кој го решил и какви резултати остварил.</li>
+      </ol>
+    </div>
+
+    <h2 id="uf-onboard">Воведување (Onboarding)</h2>
+
+    <div class="flow" id="uf-17">
+      <div class="flow-h"><span class="id">UF-17</span><h3>Заеднички час за поставување на системот со класот</h3><span class="meta"><b>Кој:</b> цел клас, со присуство на наставникот · <b>Извор:</b> §10.1</span></div>
+      <p>Бидејќи заклучувањето на фокусот е задолжително и бара нативна апликација заедно со системска дозвола од оперативниот систем, секој клас поминува еден училишен час за поставување на системот пред првиот вистински час:</p>
+      <ol class="steps">
+        <li>Ја инсталираат апликацијата.</li>
+        <li>Се најавуваат со училишната е-пошта.</li>
+        <li>Го авторизираат заклучувањето — со присуство на наставникот „за да ги среди оние пет телефони кои прават отпор“.</li>
+      </ol>
+      <p class="small">Четириесет и пет минути кои се одвојуваат еднаш по клас. Спецификацијата го означува ова како непроверена претпоставка (C, §14).</p>
+    </div>
+
+    <div class="flow" id="uf-18">
+      <div class="flow-h"><span class="id">UF-18</span><h3>Прво предавање на наставникот — воден прв час</h3><span class="meta"><b>Кој:</b> наставник · <b>Извор:</b> §10.2</span></div>
+      <p>Не е видео клип. Апликацијата го води наставникот низ подготовката на еден реален час од почеток до крај:</p>
+      <ol class="steps">
+        <li>Ја избира единицата од е-учебникот.</li>
+        <li>Ги прегледува прашањата.</li>
+        <li>Го стартува часот.</li>
+      </ol>
+      <p>Тие го завршуваат воведот имајќи час подготвен за утре. Водичот (walkthrough) мора да го опфати отворањето на приказот за класот као втор прозорец — „чекорот кој најверојатно ќе тргне наопаку пред целиот клас“.</p>
+    </div>
+
+    <h2 id="uf-admin">Администрација и известување</h2>
+
+    <div class="flow" id="uf-19">
+      <div class="flow-h"><span class="id">UF-19</span><h3>Месечен извештај за директорот</h3><span class="meta"><b>Кој:</b> автоматски · <b>Извор:</b> §9.3</span></div>
+      <ol class="steps">
+        <li>Секој месец автоматски му се испраќа PDF на директорот по е-пошта. Без најава, без потреба од каква било конфигурација.</li>
+        <li>Првата страница е напишана така што може да се проследи понатаму без уредување; втората страница е наменета исклучиво за директорот (содржината е опфатена во <a href="#fr-59">FR-59</a>).</li>
+        <li>Е-поштата содржи траен приватен линк до секој претходен извештај — еден непредвидлив URL-линк, без потреба од корисничка сметка.</li>
+      </ol>
+      <p class="small">Училишниот администратор може повторно да го испрати извештајот (§3.3).</p>
+    </div>
+
+    <div class="flow" id="uf-20">
+      <div class="flow-h"><span class="id">UF-20</span><h3>Промени во ростерот (списокот)</h3><span class="meta"><b>Кој:</b> училишен администратор · <b>Извор:</b> §12</span></div>
+      <ul>
+        <li><b>Додај ученик на средина на годината.</b> Почнува со нула поени; табелата на класот мора да прикаже дека се приклучил подоцна во текот на годината.</li>
+        <li><b>Отстрани ученик.</b> Нивните податоци се зачувуваат според правилото за задржување (§11.6) сè додека не се побара нивно бришење.</li>
+        <li><b>Префрли ученик во друг клас.</b> Нивната историја се сели заедно со нив.</li>
+      </ul>
+    </div>
+
+    <div class="flow" id="uf-21">
+      <div class="flow-h"><span class="id">UF-21</span><h3>Пристап на персоналот на TeacherAid до училишните податоци</h3><span class="meta"><b>Кој:</b> поддршка од TeacherAid · <b>Извор:</b> §11.4</span></div>
+      <ol class="steps">
+        <li>Се појавува проблем за кој е потребна поддршка. Нема траен (постојан) пристап.</li>
+        <li>Се доделува пристап за тој конкретен инцидент, со временско ограничување.</li>
+        <li>Пристапот истекува автоматски.</li>
+        <li>Пристапот се запишува во дневникот за ревизија (audit log), а училишниот администратор може да го види секое поединечно појавување.</li>
+      </ol>
+    </div>
+
+    <div class="flow" id="uf-22">
+      <div class="flow-h"><span class="id">UF-22</span><h3>Барање за извоз или бришење на податоците на одреден ученик</h3><span class="meta"><b>Кој:</b> училиштето, потоа поддршка од TeacherAid · <b>Извор:</b> §11.5</span></div>
+      <ol class="steps">
+        <li>Училиштето поднесува писмено барање.</li>
+        <li>Службата за поддршка рачно ги извезува сите податоци за тој ученик, или ги брише.</li>
+      </ol>
+      <p class="small">Во v1 не постои опција за самостоен извоз или бришење за администраторот.</p>
+    </div>
+
+    <h2 id="uf-empty">Кориснички текови кои спецификацијата не ги опишува</h2>
+    <div class="emptyset">
+      <div class="empty" id="e-12"><span class="tag"><span class="id">E-12</span>Недефиниран случај · поканување на наставник</span><p>Администраторот „поканува и отстранува наставници“ (§3.3). Не е опишано како се испраќа поканата, како се прифаќа и како се претвора во прва најава.</p></div>
+      <div class="empty" id="e-13"><span class="tag"><span class="id">E-13</span>Недефиниран случај · ресетирање на лозинка</span><p>Барањето е да се изгради „правилно“ и да биде „брзо на телефон“ (§3.1). Не се наведени конкретни чекори.</p></div>
+      <div class="empty" id="e-14"><span class="tag"><span class="id">E-14</span>Недефиниран случај · креирање на училишниот администратор</span><p>„Се креира од страна на TeacherAid за време на воведувањето (onboarding)“ (§3.3). Не е опишано од што се состои воведувањето на едно училиште.</p></div>
+      <div class="empty" id="e-15"><span class="tag"><span class="id">E-15</span>Недефиниран случај · прва најава и запишување на ученик</span><p>Освен „најави се со училишната е-пошта“ на часот за поставување (§10.1) и управувањето со списоците од страна на администраторот (§3.3), ништо не опишува како се создава сметката на еден ученик или како ученикот се запишува во соодветниот клас.</p></div>
+      <div class="empty" id="e-16"><span class="tag"><span class="id">E-16</span>Недефиниран случај · авторизирање на заклучувањето на фокусот на телефонот</span><p>Именувани се механизмите на оперативниот систем (§6.2). Сликите на екранот и чекорите низ кои поминува еден ученик за да ја додели оваа дозвола не се наведени.</p></div>
+      <div class="empty" id="e-17"><span class="tag"><span class="id">E-17</span>Недефиниран случај · што гледа ученикот</span><p>Спецификацијата детално ги опишува приказот за класот и конзолата (§5.2), но не и екраните на телефони на ученикот во секоја состојба — лобито, помеѓу прашањата, кога тајмерот ќе истече, за време на ревизијата, по притискање на копчето за крај (End).</p></div>
+      <div class="empty" id="e-18"><span class="tag"><span class="id">E-18</span>Недефиниран случај · прилагодување на листата со блокади (distraction list)</span><p>Администраторот може да ја прилагоди „еднаш, за целото училиште“ (§6.3). Не се опишани екранот ниту чекорите.</p></div>
+      <div class="empty" id="e-19"><span class="tag"><span class="id">E-19</span>Недефиниран случај · животен циклус на индикаторот за фокус (focus-flag)</span><p>Индикаторите за фокус се појавуваат на контролната табла „со наведената причина онаму каде што ја има“ (§9.1), а блокирањето „знае само дека TeacherAid не е во преден план“ (§6.2). Не е опишано што гледа ученикот кога ќе се појави овој индикатор и дали тој може да се избрише.</p></div>
+      <div class="empty" id="e-20"><span class="tag"><span class="id">E-20</span>Недефиниран случај · освојување на значка</span><p>Значките се именувани постигнувања кај кои „дизајнот сè уште треба да се доработи“ (§13.2). Сè уште не постои дефиниран тек за нивно доделување.</p></div>
+      <div class="empty" id="e-21"><span class="tag"><span class="id">E-21</span>Недефиниран случај · листата на подготвени часови на наставникот</span><p>„Денес“ е дефинирано како „она што наставникот го подготвил и сè уште не го стартувал“ (§5.1). Не е опишан екранот ниту текот за избор на подготвен час кој треба да се одржи.</p></div>
+      <div class="empty" id="e-22"><span class="tag"><span class="id">E-22</span>Недефиниран случај · за време на и по неуспешно генерирање</span><p>Не е опишано што гледа наставникот додека трае генерирањето, ниту што се случува доколку тоа падне или врати неупотреблива содржина (§4.1).</p></div>
+      <div class="empty" id="e-23"><span class="tag"><span class="id">E-23</span>Недефиниран случај · како учениците добиваат сет за вежбање</span><p>Не е наведено како учениците се известуваат дека постои сет за вежбање, ниту дали постои краен рок (§8.3). Токенот за известувања (push token) е наведен меѓу зачуваните податоци (§11.1), но не е опишано никакво известување.</p></div>
+      <div class="empty" id="e-24"><span class="tag"><span class="id">E-24</span>Недефиниран случај · приклучување со код</span><p>Приказот за класот прикажува „QR и краток код“ (§5.4). Опишано е само скенирањето; не е наведено дали кодот наместо тоа може да се внесе рачно.</p></div>
+    </div>
+
+  </div>
+</div>
+</section>
+<!-- ============ 4. FUNCTIONAL REQUIREMENTS ============ -->
+<section class="slide" id="requirements" data-title="4 · Функционални барања" data-short="Барања">
+<div class="inner">
+  <div class="head">
+    <span class="eyebrow">Категорија 4 од 7</span>
+    <h1>Функционални барања</h1>
+    <p class="def">Што прави и што содржи системот, област по област — функциите кои развивачот ги гради, а училиштето може да очекува да ги најде. Секоја ставка е едно барање, нумерирано за лесно повикување.</p>
+    <div class="stat" data-stat></div>
+  </div>
+  <nav class="subnav" aria-label="On this slide"></nav>
+  <div class="content">
+
+    <h2 id="fr-roles">Кориснички сметки и улоги</h2>
+    <div class="items">
+      <div class="item" id="fr-1"><span class="id">FR-1</span><div><p>Наставникот се најавува со е-пошта и лозинка. Без магични линкови, без најава со еден клик (SSO).<span class="ref">§3.1</span></p></div></div>
+      <div class="item" id="fr-2"><span class="id">FR-2</span><div><p>Постои можност за ресетирање лозинка, изградена е правилно, и работи брзо на телефон.<span class="ref">§3.1</span></p></div></div>
+      <div class="item" id="fr-3"><span class="id">FR-3</span><div><p>Наставникот може: да креира и уредува часови; да води сесии; да ги гледа само сопствените класови; да ја гледа својата контролна табла; да испраќа сетови за вежбање; да го чита анонимниот инбокс за своите сесии.<span class="ref">§3.1</span></p></div></div>
+      <div class="item" id="fr-4"><span class="id">FR-4</span><div><p>Наставникот не може: да ги гледа класовите, учениците или резултатите на другите наставници; да гледа кој било училиштен сегмент; да ги менува ростерите (списоците).<span class="ref">§3.1</span></p></div></div>
+      <div class="item" id="fr-5"><span class="id">FR-5</span><div><p>Ученикот се најавува со училишната е-пошта. Таа сметка претставува негов идентитет за присуство, поени, индикатори за фокус и резултати по тема.<span class="ref">§3.2</span></p></div></div>
+      <div class="item" id="fr-6"><span class="id">FR-6</span><div><p>Една активна најава по ученичка сметка истовремено. Втор најавен уред ја прекинува најавата на првиот.<span class="ref">§3.2</span></p></div></div>
+      <div class="item" id="fr-7"><span class="id">FR-7</span><div><p>Ученикот може: да се приклучи на сесија во која е запишан; да одговара на прашања; да испрати анонимно прашање; да ги гледа сопствените поени, ранг, значки, историја на одговори и сетови за вежбање.<span class="ref">§3.2</span></p></div></div>
+      <div class="item" id="fr-8"><span class="id">FR-8</span><div><p>Ученикот не може: да ги гледа одговорите, образложенијата или резултатите на друг ученик; да види кој го испратил анонимното прашање; да ја гледа контролната табла на наставникот.<span class="ref">§3.2</span></p></div></div>
+      <div class="item" id="fr-9"><span class="id">FR-9</span><div><p>Училишниот администратор (училишниот секретар или ИТ лице) е реална улога со сопствени екрани, креирана од страна на TeacherAid при воведувањето (onboarding).<span class="ref">§3.3</span></p></div></div>
+      <div class="item" id="fr-10"><span class="id">FR-10</span><div><p>Училишниот администратор може: да креира и уредува класови и списоци (ростери); да поканува и отстранува наставници; да префрла ученик меѓу класови; да додава или отстранува ученик на средина од годината; да ја прилагодува листата со блокади (distraction list); да го гледа прегледот на користење на училиштето; повторно да го испрати извештајот до директорот; да го гледа дневникот за пристап на персоналот (staff-access log).<span class="ref">§3.3</span></p></div></div>
+      <div class="item" id="fr-11"><span class="id">FR-11</span><div><p>Училишниот администратор не може да ги гледа индивидуалните одговори на учениците, образложенијата, анонимните прашања или резултатите по тема.<span class="ref">§3.3</span></p></div></div>
+      <div class="item" id="fr-12"><span class="id">FR-12</span><div><p>Директорот нема корисничка сметка, нема што да конфигурира ниту да учи; тој го добива месечниот извештај по е-пошта.<span class="ref">§3.4</span></p></div></div>
+    </div>
+
+    <h2 id="fr-lesson">Часови</h2>
+    <div class="items">
+      <div class="item" id="fr-13"><span class="id">FR-13</span><div><p>Часот е објект со повеќекратна употреба: се креира еднаш, се води многу пати.<span class="ref">§4</span></p></div></div>
+      <div class="item" id="fr-14"><span class="id">FR-14</span><div><p>Примарен влез за часот е единица од е-учебникот. Наставникот ги избира предметот, годината и единицата од однапред вчитаните содржини („два допира“) и може да додаде една реченица за нагласување.<span class="ref">§4.1</span></p></div></div>
+      <div class="item" id="fr-15"><span class="id">FR-15</span><div><p>Процесот на генерирање враќа: вовед (opener); 5–8 поп-ап прашања со одговори и објаснувања; предложен тајмер за секое прашање; резиме за ревизија. На македонски јазик. Со можност за уредување.<span class="ref">§4.1</span></p></div></div>
+      <div class="item" id="fr-16"><span class="id">FR-16</span><div><p>TeacherAid однапред ги вчитува и ги дели на делови (chunks) е-учебниците за трите пилот предмети, по наставна единица. Наставниците не ги прикачуваат самите.<span class="ref">§4.1</span></p></div></div>
+      <div class="item" id="fr-17"><span class="id">FR-17</span><div><p>Постои алтернативен влез — „внеси три реченици“ — за предмети за кои нема вчитан учебник, или за нешто надвор од програмата.<span class="ref">§4.1</span></p></div></div>
+      <div class="item" id="fr-18"><span class="id">FR-18</span><div><p>Четири типови на прашања, сите оценети автоматски:<span class="ref">§4.2</span></p>
+        <div class="tablewrap"><table>
+          <thead><tr><th>Тип</th><th>Што прави ученикот</th><th>Како се оценува</th></tr></thead>
+          <tbody>
+            <tr><td>Повеќекратен избор</td><td>Допира една од 2–4 опции</td><td>Точно, плус бонус за брзина</td></tr>
+            <tr><td>Образложение во една линија</td><td>Пишува кратко слободно образложение по гласањето за воведот</td><td>Поени за самото пишување, без разлика дали е точно или погрешно</td></tr>
+            <tr><td>Бројчен одговор</td><td>Внесува број</td><td>Точно во рамките на дозволеното отстапување кое го поставува авторот, на пр. 2601 ± 10. Плус бонус за брзина</td></tr>
+            <tr><td>Точно / неточно</td><td>Два допира</td><td>Точно, плус бонус за брзина</td></tr>
+          </tbody>
+        </table></div>
+        <p class="small">Бројчените прашања и точно/неточно постојат бидејќи прашањата по физика и електроника „не можат најискрено да се изразат преку четири понудени опции“. Образложението во една линија е „педагошки најносечкиот дел, а не декорација“.</p>
+      </div></div>
+      <div class="item" id="fr-19"><span class="id">FR-19</span><div><p>Типови на прашања кои не се вклучени во v1: подредување, поврзување, допри-на-мапата, цртање.<span class="lab neutral">Не е во v1 / Not in v1</span><span class="ref">§4.2</span></p></div></div>
+      <div class="item" id="fr-20"><span class="id">FR-20</span><div><p>Слики можат да се појават во прашањето, во опциите и при откривањето на одговорот. Потребно за историја.<span class="ref">§4.3</span></p></div></div>
+      <div class="item" id="fr-21"><span class="id">FR-21</span><div><p>Формулите се визуелизираат — математички и хемиски знаци. Потребно за физика и електроника; „без ова, тие наставници воопшто не можат да ги напишат своите прашања“.<span class="ref">§4.3</span></p></div></div>
+      <div class="item" id="fr-22"><span class="id">FR-22</span><div><p>Сликите имаат оптимизиран пат за слаб интернет (low-bandwidth): се испорачуваат компресирани и со големина прилагодена за телефон, а тајмерот на прашањето никогаш не чека слика која сè уште не се вчитала.<span class="ref">§4.3</span></p></div></div>
+      <div class="item" id="fr-23"><span class="id">FR-23</span><div><p>Генераторот предлага времетраење по прашање врз основа на она што го напишал — прашање за присетување не е исто што и пресметка. Наставникот може да го смени секое од нив при прегледот, перед почетокот на часот.<span class="ref">§4.4</span></p>
+        <p>Предложени почетни вредности:<span class="lab">Предложено / Proposed</span></p>
+        <div class="tablewrap"><table class="narrow">
+          <thead><tr><th>Форма на прашањето</th><th class="num">Предложено</th></tr></thead>
+          <tbody>
+            <tr><td>Присетување, точно/неточно</td><td class="num">15 s</td></tr>
+            <tr><td>Повеќекратен избор, образложение</td><td class="num">25 s</td></tr>
+            <tr><td>Бројчен одговор, пресметка</td><td class="num">45 s</td></tr>
+            <tr><td>Гласање за вовед (opener)</td><td class="num">30 s, па 45 s за образложение</td></tr>
+          </tbody>
+        </table></div>
+      </div></div>
+      <div class="item" id="fr-24"><span class="id">FR-24</span><div><p>Еден час може да се води во повеќе сесии. Секоја сесија има сопствено присуство, одговори, поени и резултати. Уредувањето на часот помеѓу две предавања влијае на подоцнежните сесии, а не на записите од претходните.<span class="ref">§4.5</span></p></div></div>
+      <div class="item" id="fr-25"><span class="id">FR-25</span><div><p>Уредувањата со еден допир на генерираниот час се фиксен ред од акции — Полесно, Потешко, Повеќе прашања, Направи го воведот дебата (или предвидување), Кратки тајмери. Без слободен разговор.<span class="ref">§4.6</span></p></div></div>
+      <div class="item" id="fr-26"><span class="id">FR-26</span><div><p>Училишната библиотека: секој час што го зачувал некој наставник е видлив за другите наставници во истото училиште, кои можат да го копираат во својата корисничка сметка и да ја уредуваат својата копија. Оригиналот никогаш не се менува со уредување на копијата. Без национална библиотека, без споделување меѓу училишта, без јавни часови.<span class="ref">§4.7</span></p></div></div>
+    </div>
+
+    <h2 id="fr-session">Сесија во живо</h2>
+    <div class="items">
+      <div class="item" id="fr-27"><span class="id">FR-27</span><div><p>Нема распоред на часови. Апликацијата нема концепт за наставни часови, распореди или училишни програми; „денес“ е она што наставникот го подготвил и сè уште не го стартувал.<span class="ref">§5.1</span></p></div></div>
+      <div class="item" id="fr-28"><span class="id">FR-28</span><div><p>Два прозорци во прелистувачот:<span class="ref">§5.2</span></p>
+        <div class="tablewrap"><table>
+          <thead><tr><th>Прозорец</th><th>Каде</th><th>Прикажува</th></tr></thead>
+          <tbody>
+            <tr><td>Приказ за класот</td><td>Се проектира</td><td>QR и код за приклучување, бројач за приклучени, прашањето, столпчиња во живо, откривање на одговорот, табела со резултати</td></tr>
+            <tr><td>Конзола</td><td>Екран на лаптопот на наставникот</td><td>Сè од горенаведеното во минијатура, плус анонимниот инбокс со имиња на испраќачите, состојбата со одговорите на секој ученик, активирањето на поп-ап, контролата за прескокнување</td></tr>
+          </tbody>
+        </table></div>
+        <p class="small">Конзолата никогаш не смее да се проектира: личните податоци на учениците и анонимниот инбокс постојат само таму.</p>
+      </div></div>
+      <div class="item" id="fr-29"><span class="id">FR-29</span><div><p>Приказот за класот се отвора како посебен прозорец со еден клик, а не со влечење.<span class="ref">§5.2</span></p></div></div>
+      <div class="item" id="fr-30"><span class="id">FR-30</span><div><p>Состојбите на сесијата се lobby, opener, teaching, review, ended, по тој редослед. Наставникот ја менува состојбата. Серверот е авторитет за времето за секое одбројување; клиентите го прикажуваат.<span class="ref">§5.3</span></p></div></div>
+      <div class="item" id="fr-31"><span class="id">FR-31</span><div><p>Приказот за класот покажува QR-код и краток код. QR-кодот се менува на секои 30 секунди.<span class="ref">§5.4</span></p></div></div>
+      <div class="item" id="fr-32"><span class="id">FR-32</span><div><p>Приклучувањето го означува ученикот како присутен со временска ознака. Доцните приклучувања се означуваат со временска ознака за доцнење.<span class="ref">§5.4</span></p></div></div>
+      <div class="item" id="fr-33"><span class="id">FR-33</span><div><p>Воведот (opener) има два режими: предвидување (основен) и дебата, како што е опишано во <a href="#uf-9">UF-9</a> и <a href="#uf-10">UF-10</a>.<span class="ref">§5.5</span></p></div></div>
+      <div class="item" id="fr-34"><span class="id">FR-34</span><div><p>При гласањето за воведот се појавуваат столпчиња во живо на приказот за класот, а потоа се открива точниот одговор. Образложенијата се прикажуваат на класот без имиња; конзолата прикажува имиња.<span class="ref">§5.5</span></p></div></div>
+      <div class="item" id="fr-35"><span class="id">FR-35</span><div><p>Поп-ап прашањето се активира со еден допир и се појавува на секој телефон со вклучен тајмер.<span class="ref">§5.6</span></p></div></div>
+      <div class="item" id="fr-36"><span class="id">FR-36</span><div><p>Потсетникот (nudge): доколку поминат неколку минути без активирано прашање, конзолата прикажува дискретна сугестија — без модален прозорец, без звук.<span class="ref">§5.6</span></p></div></div>
+      <div class="item" id="fr-37"><span class="id">FR-37</span><div><p>Наставникот може да активира и ad-hoc прашање („брзо: да или не?“) без подготовка.<span class="ref">§5.6</span></p></div></div>
+      <div class="item" id="fr-38"><span class="id">FR-38</span><div><p>Анонимни прашања: ученикот може да испрати вакво прашање во кој било момент од часот; наставникот гледа кој го испратил; ниту еден соученик никогаш не го дознава тоа; стандардниот лимит е 3 прашања по ученик за еден час; наставникот одговара на нив во блокот за ревизија; инбоксот постои само на конзолата.<span class="ref">§5.7</span></p></div></div>
+      <div class="item" id="fr-39"><span class="id">FR-39</span><div><p>Прескокнување: наставникот може да прескокне прашање во тековната сесија; за него не се доделуваат поени; приказот за класот јасно го известува тоа.<span class="ref">§5.8</span></p></div></div>
+      <div class="item" id="fr-40"><span class="id">FR-40</span><div><p>Нема уредување на текстот на прашањето во живо за време на сесија во живо.<span class="ref">§5.8</span></p></div></div>
+      <div class="item" id="fr-41"><span class="id">FR-41</span><div><p>Телефоните локално ги зачувуваат во низа (queue) одговорите и ги синхронизираат при повторно поврзување. Ученикот кој ќе одговори за време на прекинатиот сигнал сè уште добива поени, со неговото оригинално време на одговор.<span class="ref">§5.9</span></p></div></div>
+      <div class="item" id="fr-42"><span class="id">FR-42</span><div><p>Конзолата прави разлика помеѓу „исклучен од мрежа“ (offline) и „нема одговорено“.<span class="ref">§5.9</span></p></div></div>
+      <div class="item" id="fr-43"><span class="id">FR-43</span><div><p>Часот на наставникот е зачуван во кеш-меморијата на неговиот уред. Доколку се урива целата мрежа, наставникот сè уште ги има прашањата и може да ги чита гласно; пресметката на поени паузира.<span class="ref">§5.9</span></p></div></div>
+      <div class="item" id="fr-44"><span class="id">FR-44</span><div><p>Сесијата завршува кога наставникот ќе притисне на копчето за крај (End); нема автоматско затворање. При крај: поените се финализираат, присуството се запишува, се прикажува листа со отсутни ученици, часот се архивира.<span class="ref">§5.10</span></p></div></div>
+      <div class="item" id="fr-45"><span class="id">FR-45</span><div><p>Постои видлив индикатор за отворена сесија, а завршувањето на веќе отворена сесија од која било точка во апликацијата е дејство со еден допир.<span class="ref">§5.10</span></p></div></div>
+    </div>
+
+    <h2 id="fr-focus">Заклучување на фокусот (Focus lock)</h2>
+    <div class="items">
+      <div class="item" id="fr-46"><span class="id">FR-46</span><div><p>Ученик кој не го авторизирал заклучувањето на фокусот не може да се приклучи на сесијата.<span class="ref">§6.1</span></p></div></div>
+      <div class="item" id="fr-47"><span class="id">FR-47</span><div><p>Апликацијата за ученици е нативна за iOS и Android, бидејќи заклучувањето бара системски капацитети од оперативниот систем кои веб-страница не може да ги допре.<span class="ref">§6.2</span></p>
+        <p class="dev"><b>iOS</b> — Screen Time: <b>FamilyControls</b> за авторизација, <b>ManagedSettings</b> за заштита на апликации, <b>DeviceActivity</b> за временски опсег. Индивидуална авторизација од сопственикот на уредот, без спарување за родители. Потребно е право за Family Controls од Apple, за што се потребни недели.<br><b>Android</b> — <b>PACKAGE_USAGE_STATS</b> за откривање на апликации што го одвлекуваат вниманието во преден план, заедно со системски преклоп (system overlay), или <b>AccessibilityService</b>. Наведете го случајот за користење на фокусот/продуктивноста за преглед на Play.</p>
+      </div></div>
+      <div class="item" id="fr-48"><span class="id">FR-48</span><div><p>Блокирањето никогаш не чита што прави ученикот во другите апликации. Единствено знае дека TeacherAid не е во преден план.<span class="ref">§6.2</span></p></div></div>
+      <div class="item" id="fr-49"><span class="id">FR-49</span><div><p>Листата со блокади (distraction list) се испорачува со претпоставени вредности — социјални мрежи, игри, пораки. Училишниот администратор може да ја прилагоди еднаш, за целото училиште.<span class="ref">§6.3</span></p></div></div>
+      <div class="item" id="fr-50"><span class="id">FR-50</span><div><p>Ученик кој не може или не сака да го авторизира заклучувањето се означува како присутен, не освојува поени, а причината се прикажува на контролната табла. Никогаш не се означува како отсутен.<span class="ref">§6.4</span></p></div></div>
+    </div>
+
+    <h2 id="fr-nophone">Ученици без функционален телефон</h2>
+    <div class="items">
+      <div class="item" id="fr-51"><span class="id">FR-51</span><div><p>За ученик кој нема телефон, има празна батерија, нема интернет или нема авторизација за фокус: наставникот го означува како присутен со еден допир; без поени за тој час; контролната табла ја прикажува причината, со цел нулата да не се толкува како незаинтересираност. Еден ист програмски пат (code path) за четири различни причини, со очекување да се користи во речиси секој час.<span class="ref">§7.1</span></p></div></div>
+      <div class="item" id="fr-52"><span class="id">FR-52</span><div><p>Без спарување на уредите со друг соученик, и без внесување одговори од страна на наставникот во име на ученикот.<span class="lab neutral">Не е во v1 / Not in v1</span><span class="ref">§7.2</span></p></div></div>
+    </div>
+
+    <h2 id="fr-after">По часот</h2>
+    <div class="items">
+      <div class="item" id="fr-53"><span class="id">FR-53</span><div><p>При притискање на End, наставникот ги гледа само имињата на учениците кои биле отсутни, форматирани за копирање во е-Дневник. TeacherAid не запишува во е-Дневник и не го заменува.<span class="ref">§8.1</span></p></div></div>
+      <div class="item" id="fr-54"><span class="id">FR-54</span><div><p>Блокот за ревизија на приказот за класот ги прикажува најчесто утнатите прашања по редослед од најлошото нагоре, како и анонимните прашања за наставникот да ги одговори гласно. Наставникот сам го дава објаснувањето; нема објаснување од вештачка интелигенција ниту дополнително генерирана содржина за настава.<span class="ref">§8.2</span></p></div></div>
+      <div class="item" id="fr-55"><span class="id">FR-55</span><div><p>Сетови за вежбање: по завршувањето на часот наставникот може да испрати изборен сет на класот, составен автоматски од утнатите прашања од таа сесија без ново генерирање. Решавањето е доброволно и носи поени. Наставникот гледа кој го решил и какви резултати постигнал.<span class="ref">§8.3</span></p></div></div>
+      <div class="item" id="fr-56"><span class="id">FR-56</span><div><p>За секој ученик, TeacherAid зачувува присуство, поени, одговори, точност, време на одговор и точност по теми со текот на времето. Наставникот може да види кој ученик постојано греши на одредена тема.<span class="ref">§8.4</span></p></div></div>
+    </div>
+
+    <h2 id="fr-dash">Контролни табли и извештај</h2>
+    <div class="items">
+      <div class="item" id="fr-57"><span class="id">FR-57</span><div><p>Контролната табла на наставникот е еден екран по клас, без потреба од какви било прилагодувања, и ги прикажува:<span class="ref">§9.1</span></p>
+        <ul>
+          <li>Присуството по час и по ученик</li>
+          <li>Поените и учеството со текот на времето</li>
+          <li>Индикаторите за фокус, со наведена причина онаму каде што ја има</li>
+          <li>Точноста по теми, за целиот клас и по ученик</li>
+          <li>Анонимниот инбокс, со имињата на испраќачите</li>
+          <li>Решавањето на вежбите и резултатите</li>
+          <li>Историја на одржаните часови, со можност за повторно користење на секој час</li>
+        </ul>
+      </div></div>
+      <div class="item" id="fr-58"><span class="id">FR-58</span><div><p>Прегледот на училишниот администратор ги комбинира поставките (класови, списоци, персонал, листа со блокади) со преглед на користењето: кои наставници држат часови, колку често, и кои наставници сè уште немаат започнато. Тој не прикажува никакви одговори на учениците, образложенија, анонимни прашања или резултати по темите.<span class="ref">§9.2</span></p></div></div>
+      <div class="item" id="fr-59"><span class="id">FR-59</span><div><p>Извештајот за директорот: месечен, автоматски, по е-пошта во PDF формат.<span class="ref">§9.3</span></p>
+        <p><b>Страница еден</b> — напишана така што може да се проследи до родителите, општината или локалните медиуми без уредување: одржани часови; активни наставници; просечно присуство; просечен ангажман (одговори по поп-ап); најдобри класови; најдобри наставници; кратко резиме од два реда на обичен јазик; тренд во однос на претходниот месец.</p>
+        <p><b>Страница два</b> — само за директорот, не е наменета за проследување: споредба со други училишта кои ја користат апликацијата TeacherAid.</p>
+        <p>Е-поштата содржи траен приватен линк до секој претходен извештај — еден непредвидлив URL-линк, без потреба од корисничка сметка — со цел „директорот кој има потреба од бројките од минатиот месец за општината да не мора никого да прашува“.</p>
+      </div></div>
+      <div class="item" id="fr-60"><span class="id">FR-60</span><div><p>Училишниот администратор може повторно да го испрати извештајот до директорот.<span class="ref">§3.3</span></p></div></div>
+    </div>
+
+    <h2 id="fr-onboard">Воведување (Onboarding), поддршка и пристапност</h2>
+    <div class="items">
+      <div class="item" id="fr-61"><span class="id">FR-61</span><div><p>Воден прв час за наставници — а не видео клип. Апликацијата го води наставникот низ подготовка на еден вистински час од почеток до крај (избор на единица, преглед на прашања, стартување), вклучувајќи го и отворањето на приказот за класот како втор прозорец.<span class="ref">§10.2</span></p></div></div>
+      <div class="item" id="fr-62"><span class="id">FR-62</span><div><p>Помош во самата апликација (In-app help), со пребарување, ги опфаќа вообичаените проблеми.<span class="ref">§10.3</span></p></div></div>
+      <div class="item" id="fr-63"><span class="id">FR-63</span><div><p>Директен канал до личност, со еден допир, за итни ситуации — „статија со помош не му користи на наставник кој стои пред триесет ученици во 08:05 часот“.<span class="ref">§10.3</span></p></div></div>
+      <div class="item" id="fr-64"><span class="id">FR-64</span><div><p>Основа на пристапноста: соодветен контраст; читливост од задниот дел на училницата и на евтин екран; никогаш да не се користи само боја за означување точно или погрешно. Без дополнително време за поединечни ученици, без обезбедена поддршка за читач на екран, без гарантирано скалирање на текстот — евидентирано како познато ограничување.<span class="ref">§10.4</span></p></div></div>
+    </div>
+
+    <h2 id="fr-data">Податоци, приватност и безебедност</h2>
+    <div class="items">
+      <div class="item" id="fr-65"><span class="id">FR-65</span><div><p>Што се зачувува и кој има пристап до тоа:<span class="ref">§11.1</span></p>
+        <div class="tablewrap"><table>
+          <thead><tr><th>Податоци</th><th>Кој има пристап</th></tr></thead>
+          <tbody>
+            <tr><td>Име на ученикот, клас, училишна е-пошта</td><td>Наставник, администратор, ученикот</td></tr>
+            <tr><td>Присуство по сесија со временска ознака</td><td>Наставник; во збирна форма за директорот</td></tr>
+            <tr><td>Одговори, точност, време на одговор, поени</td><td>Наставник; ученикот ги гледа своите сопствени</td></tr>
+            <tr><td>Точност по теми со текот на времето</td><td>Наставник; ученикот ги гледа своите сопствени</td></tr>
+            <tr><td>Образложенија во една линија</td><td>Наставник со имиња; класот без имиња</td></tr>
+            <tr><td>Анонимни прашања</td><td>Наставник, со името на испраќачот</td></tr>
+            <tr><td>Фокус настани и состојба на авторизација</td><td>Наставник</td></tr>
+            <tr><td>Решавање на вежби и резултати</td><td>Наставник; ученикот ги гледа своите сопствени</td></tr>
+            <tr><td>Значки</td><td>Наставникот, ученикот, соучениците</td></tr>
+            <tr><td>Часови и генерирана содржина</td><td>Наставникот-автор; другите наставници во училиштето преку библиотеката</td></tr>
+          </tbody>
+        </table></div>
+      </div></div>
+      <div class="item" id="fr-66"><span class="id">FR-66</span><div><p>Не се зачувува: оценки; податоци за контакт на учениците освен училишната е-пошта; локација; уреднички идентификатори освен токен за известувања (push token); ништо во врска со другите апликации на телефонот.<span class="ref">§11.1</span></p></div></div>
+      <div class="item" id="fr-67"><span class="id">FR-67</span><div><p>Персоналот на TeacherAid нема постојан пристап до податоците на училиштето. Пристапот се доделува по инцидент за кој е потребна поддршка, има временско ограничување, истекува автоматски, се запишува во дневник за ревизија, а училишниот администратор може да го види секое поединечно појавување.<span class="ref">§11.4</span></p></div></div>
+      <div class="item" id="fr-68"><span class="id">FR-68</span><div><p>Барањата за извоз на сè што се чува за еден ученик, или за негово бришење, се обработуваат рачно од страна на поддршката по писмено барање од училиштето. Без опција за самостоен извоз или бришење.<span class="ref">§11.5</span></p></div></div>
+      <div class="item" id="fr-69"><span class="id">FR-69</span><div><p>Задржување: податоците од сесијата се чуваат за тековната училишна година плус уште една, а потоа се сумираат (агрегираат) и бришат. Месечните извештаи се зачувуваат во збирна форма, без имиња. Ученикот кој заминува се брише во рок од 30 дена по барање на училиштето.<span class="ref">§11.6</span></p></div></div>
+      <div class="item" id="fr-70"><span class="id">FR-70</span><div><p>Хостинг во ЕУ. Енкрипција во транзит и во мирување. Пристап заснован на улоги какви во улогите погоре. Имињата на учениците никогаш не се испраќаат до провајдерот на вештачка интелигенција — генерирањето ја користи наставната единица и реченицата на наставникот, никогаш ростерот (списокот).<span class="ref">§11.7</span></p></div></div>
+    </div>
+
+    <h2 id="fr-roster">Животен циклус на ростерот (списокот)</h2>
+    <div class="items">
+      <div class="item" id="fr-71"><span class="id">FR-71</span><div><p>Училишниот администратор може да додаде ученик во текот на годината (тој започнува со нула поени, а табелата на класот покажува дека се приклучил подоцна), да отстрани ученик (податоците се чуваат според FR-69 додека не се побара нивно бришење), и да префрли ученик меѓу класови (неговата историја се префрла со него).<span class="ref">§12</span></p></div></div>
+      <div class="item" id="fr-72"><span class="id">FR-72</span><div><p>Прераспределба на клас кај друг наставник, и втор наставник на ист клас, не се поддржани.<span class="lab neutral">Не е во v1 / Not in v1</span><span class="ref">§12</span></p></div></div>
+    </div>
+
+    <h2 id="fr-points">Поени, значки и табели со резултати (leaderboards)</h2>
+    <div class="items">
+      <div class="item" id="fr-73"><span class="id">FR-73</span><div><p>Вредностите за бодување се фиксни и идентични во секое училиште. Единствен исклучок: наставникот може да го исклучи бонусот за брзина за одреден клас.<span class="ref">§13.1</span></p></div></div>
+      <div class="item" id="fr-74"><span class="id">FR-74</span><div><p>Предложени почетни вредности:<span class="lab">Предложено / Proposed</span><span class="ref">§13.1</span></p>
+        <div class="tablewrap"><table class="narrow">
+          <thead><tr><th>Настан</th><th class="num">Предложени поени</th></tr></thead>
+          <tbody>
+            <tr><td>Гласање во воведот, точно</td><td class="num">10</td></tr>
+            <tr><td>Гласање во воведот, неточно</td><td class="num">0</td></tr>
+            <tr><td>Напишано образложение за воведот</td><td class="num">8</td></tr>
+            <tr><td>Точно поп-ап прашање</td><td class="num">10</td></tr>
+            <tr><td>Бонус за брзина</td><td class="num">до 5, во зависност од преостанатото време</td></tr>
+            <tr><td>Точно прашање од вежба</td><td class="num">5</td></tr>
+          </tbody>
+        </table></div>
+      </div></div>
+      <div class="item" id="fr-75"><span class="id">FR-75</span><div><p>Значките се именувани постигнувања за работи кои поените не можат да ги наградат — образложение на погрешен одговор, враќање од лош резултат (comeback), поставување добро прашање. „Дизајнот сè уште треба да се разработи. Празни значки се полоши отколку да нема никакви.“<span class="ref">§13.2</span></p></div></div>
+      <div class="item" id="fr-76"><span class="id">FR-76</span><div><p>Без низи (streaks).<span class="lab neutral">Не е во v1 / Not in v1</span><span class="ref">§13.2</span></p></div></div>
+      <div class="item" id="fr-77"><span class="id">FR-77</span><div><p>Две табели со резултати: класна (вистински имиња) и училишна (прекари по дифолт; училиштето може да избере поинаку). Сезоните траат по еден семестар. Без национална табела на резултати.<span class="ref">§11.3, §13.3</span></p></div></div>
+    </div>
+
+    <h2 id="fr-empty">Недефинирани случаи во оваа категорија</h2>
+    <div class="emptyset">
+      <div class="empty" id="e-25"><span class="tag"><span class="id">E-25</span>Недефиниран случај · платформи за наставникот и администраторот</span><p>Наставникот ги води сесиите „од лаптоп“ во прозорци од прелистувачот (§5.2). Дали часовите можат да се креираат од телефон, и на каков уред или платформа работат екраните на администраторот, не е наведено.</p></div>
+      <div class="empty" id="e-26"><span class="tag"><span class="id">E-26</span>Недефиниран случај · известувања (notifications)</span><p>Токенот за известувања (push token) се наоѓа меѓу зачуваните податоци (§11.1), но никакви известувања од кој било вид не се дефинирани во текстот.</p></div>
+      <div class="empty" id="e-27"><span class="tag"><span class="id">E-27</span>Недефиниран случај · провајдерот на вештачка интелигенција</span><p>Генерирањето оди до „провајдерот на вештачка интелигенција“ (§11.7). Кој провајдер или модел се користи, и што друго се испраќа освен единицата и реченицата на наставникот, не е наведено.</p></div>
+      <div class="empty" id="e-28"><span class="tag"><span class="id">E-28</span>Недефиниран случај · правило за индикатор на фокус (focus-flag)</span><p>Што се смета за напуштање на апликацијата, во кое времетраење, и како тоа се претвора во индикатор на контролната табла, не е дефинирано (§6.2, §9.1).</p></div>
+      <div class="empty" id="e-29"><span class="tag"><span class="id">E-29</span>Недефиниран случај · што значи „доцнење“</span><p>Доцните приклучувања се означуваат со временска ознака за доцнење (§5.4). Не е даден праг или дефиниција за тоа што се смета за доцнење.</p></div>
+      <div class="empty" id="e-30"><span class="tag"><span class="id">E-30</span>Недефиниран случај · кој може да го промени лимитот на прашања</span><p>Три анонимни прашања по ученик за еден час се нарекуваат „претпоставен лимит“ (§5.7). Кој може да го промени тоа, и во кои граници, не е наведено.</p></div>
+      <div class="empty" id="e-31"><span class="tag"><span class="id">E-31</span>Недефиниран случај · формула за бонусот за брзина</span><p>„До 5 поени, скалирано според преостанатото време“ е само предлог (§13.1). Како функционира скалирањето, не е дефинирано во текстот.</p></div>
+      <div class="empty" id="e-32"><span class="tag"><span class="id">E-32</span>Недефиниран случај · стандардно бројчено отстапување (tolerance)</span><p>Авторот поставува отстапување (толеранција) за бројчените одговори (§4.2). Не е наведена стандардна вредност за случаите кога авторот не внел таква.</p></div>
+      <div class="empty" id="e-33"><span class="tag"><span class="id">E-33</span>Недефиниран случај · лимити на офлајн низата (offline queue)</span><p>Одговорите локално се зачувуваат во низа и се синхронизираат при повторно поврзување (§5.9). Колку долго можат да стојат во низата, и што се случува со одговорите кои пристигнуваат откако сесијата е веќе завршена, не е наведено.</p></div>
+      <div class="empty" id="e-34"><span class="tag"><span class="id">E-34</span>Недефиниран случај · детали за испорака на извештајот</span><p>Извештајот е месечен, при што „нема што да се конфигурира“ (§9.3). Денот на испраќање, јазикот на кој е напишан, и кој ја доставува е-поштата на директорот, не се наведени.</p></div>
+      <div class="empty" id="e-35"><span class="tag"><span class="id">E-35</span>Недефиниран случај · типови на ad-hoc прашања</span><p>Може да се активира прашање без подготовка (§5.6). Кој од четирите типа на прашања може да го има, не е наведено; единствениот пример е „да или не“.</p></div>
+      <div class="empty" id="e-36"><span class="tag"><span class="id">E-36</span>Недефиниран случај · време на потсетување (nudge)</span><p>Потсетникот (nudge) се појавува по „неколку минути“ без поставено прашање (§5.6). Бројот на минути не е наведен во текстот.</p></div>
+      <div class="empty" id="e-37"><span class="tag"><span class="id">E-37</span>Недефиниран случај · сопствените екрани на ученикот</span><p>Ученикот може да ги гледа сопствените поени, ранг, значки, историја на одговори и сетови за вежбање (§3.2). Не се опишани екранот, распоредот ниту нивото на детали.</p></div>
+      <div class="empty" id="e-38"><span class="tag"><span class="id">E-38</span>Недефиниран случај · администраторот и библиотеката</span><p>Библиотеката е видлива за „другите наставници во истото училиште“ (§4.7). Дали училишниот администратор може да ја гледа, не е наведено.</p></div>
+    </div>
+
+  </div>
+</div>
+</section>
+<!-- ============ 5. BUSINESS RULES ============ -->
+<section class="slide" id="rules" data-title="5 · Бизнис правила" data-short="Бизнис правила">
+<div class="inner">
+  <div class="head">
+    <span class="eyebrow">Категорија 5 од 7</span>
+    <h1>Бизнис правила</h1>
+    <p class="def">Фиксните политики и ограничувања кои производот мора да ги почитува без оглед на екранот или функцијата — кој што смее да гледа, што никогаш не е дозволено, што е одлучено и останува така — заедно со образложението на спецификацијата и евидентираната деловна цена за секое од нив.</p>
+    <div class="stat" data-stat></div>
+  </div>
+  <nav class="subnav" aria-label="On this slide"></nav>
+  <div class="content">
+
+    <h2 id="br-identity">Идентитет и пристап</h2>
+    <div class="items">
+      <div class="item" id="br-1"><span class="id">BR-1</span><div><p><b>Идентитетот на ученикот е неговата училишна е-пошта.</b> Не постои опција за рачен внес на име и клас. Причина: лажно претставување (impersonation) — ученикот не може да тврди дека е некој друг; присуството засновано на самостојно внесени имиња „не би можело да биде доверливо или да се проследува понатаму“.<span class="ref">§3.2</span></p></div></div>
+      <div class="item" id="br-2"><span class="id">BR-2</span><div><p><b>Една активна најава по ученичка сметка.</b> Втор најавен уред ја завршува сесијата на првиот.<span class="ref">§3.2</span></p></div></div>
+      <div class="item" id="br-3"><span class="id">BR-3</span><div><p><b>Наставникот ги гледа само сопствените класови, ученици и резултати</b> — ништо од другите наставници, ништо на ниво на целото училиште.<span class="ref">§3.1</span></p></div></div>
+      <div class="item" id="br-4"><span class="id">BR-4</span><div><p><b>Администраторот гледа само дали се одржува настава, а не и што одговорило кое било дете.</b> Без индивидуални одговори, образложенија, анонимни прашања или резултати по темите.<span class="ref">§3.3</span></p></div></div>
+      <div class="item" id="br-5"><span class="id">BR-5</span><div><p><b>Директорот никогаш нема најава во системот.</b> „Ова е одлучено и останува така.“<span class="ref">§3.4</span></p></div></div>
+      <div class="item" id="br-6"><span class="id">BR-6</span><div><p><b>Наставниците се најавуваат со е-пошта и лозинка</b> — без магични линкови, без најава со еден клик.<span class="ref">§3.1</span></p>
+        <aside class="cost"><span class="eyebrow">Цена на оваа одлука / Cost of this decision</span><p>Белешката за дистрибуција го идентификува терминот 08:05 как услов и пропишува магични линкови за наставниците да нема што да заборават. Лозинките, пак, го гарантираат тој итен повик за поддршка. Изградете го ресетирањето лозинка правилно и направете го брзо на телефон.</p></aside>
+      </div></div>
+      <div class="item" id="br-7"><span class="id">BR-7</span><div><p><b>Конзолата никогаш не се проектира.</b> Личните податоци на учениците и анонимниот инбокс постојат само таму.<span class="ref">§5.2</span></p></div></div>
+    </div>
+
+    <h2 id="br-scope">Опсег и јазик</h2>
+    <div class="items">
+      <div class="item" id="br-8"><span class="id">BR-8</span><div><p><b>Интерфејсот е само на македонски јазик.</b> Интерфејс на албански јазик следува по потврдувањето на македонскиот корпус.<span class="ref">§2</span></p></div></div>
+      <div class="item" id="br-9"><span class="id">BR-9</span><div><p><b>Поврзаност со наставната програма (curriculum grounding) постои само за историја, електроника и физика.</b> Секој друг предмет работи врз основа на сопствениот внес на наставникот.<span class="ref">§2</span></p></div></div>
+      <div class="item" id="br-10"><span class="id">BR-10</span><div><p><b>Само теоретски часови.</b> Практичната и лабораториската настава се исклучени; пилотното користење треба да се мери по теоретски час.<span class="ref">§2</span></p></div></div>
+      <div class="item" id="br-11"><span class="id">BR-11</span><div><p><b>Големината на сесиите е за најмногу околу 35 ученици.</b> Универзитетите се исклучени делумно и поради тоа што нивните амфитеатри „далеку ја надминуваат претпоставката за сесија со 35 ученици“.<span class="ref">§2</span></p></div></div>
+      <div class="item" id="br-12"><span class="id">BR-12</span><div><p><b>Развојот на производот не смее да претпоставува само гимназија.</b> Пилот предметите упатуваат на стручно или техничко училиште; прашањето дали почетната точка ќе биде приватна гимназија е сè уште отворена деловна одлука.<span class="ref">§2</span></p></div></div>
+      <div class="item" id="br-13"><span class="id">BR-13</span><div><p><b>Никогаш не ветувајте синхронизација со e-Дневник.</b> Таа зависи од МОН.<span class="ref">§2</span></p></div></div>
+      <div class="item" id="br-14"><span class="id">BR-14</span><div><p><b>Училиштето стапува во контакт со родителите на хартија.</b> Без апликација или најава за родителите.<span class="ref">§2</span></p></div></div>
+    </div>
+
+    <h2 id="br-content">Содржина на часот</h2>
+    <div class="items">
+      <div class="item" id="br-15"><span class="id">BR-15</span><div><p><b>Авторските права за е-учебниците мора да бидат расчистени со МОН/БРО пред да се испорача функцијата за вчитување содржини.</b> „Ова не е ставка за пристапот пушти-па-види.“<span class="ref">§4.1</span></p></div></div>
+      <div class="item" id="br-16"><span class="id">BR-16</span><div><p><b>Ништо непрегледано не стигнува до учениците.</b> Сè што е генерирано може да се уредува од страна на наставникот пред да се пушти; блокот за ревизија нема AI повторно објаснување; сетовите за вежбање се градат исклучиво од утнатите прашања на самата сесија, без ново генерирање содржина.<span class="ref">§4.1, §8.2, §8.3</span></p></div></div>
+      <div class="item" id="br-17"><span class="id">BR-17</span><div><p><b>Фините прилагодувања се фиксен сет од пет акции со еден допир; нема разговор со слободен текст.</b> Причина: тие по самата своја конструкција остануваат „во рамките на наставната програма“, чинат „дел од трошокот за цел разговор“, и не оставаат „простор за лутање на вештачката интелигенција“. Ова го заменува наставничкиот четбот опишан во постарите белешки.<span class="ref">§4.6</span></p></div></div>
+      <div class="item" id="br-18"><span class="id">BR-18</span><div><p><b>Генераторот го предлага секој тајмер; наставникот може да го промени пред почетокот.</b> Почетните стандардни вредности се само предложени, а не конечни дефинирани.<span class="lab">Предложено / Proposed</span><span class="ref">§4.4</span></p></div></div>
+      <div class="item" id="br-19"><span class="id">BR-19</span><div><p><b>Уредувањето на часот ги менува само идните предавања.</b> Записот за претходната сесија никогаш не се менува.<span class="ref">§4.5</span></p></div></div>
+      <div class="item" id="br-20"><span class="id">BR-20</span><div><p><b>Часовите се споделуваат само во рамките на едно училиште, а копијата никогаш не го менува оригиналот.</b> Без национална библиотека, без споделување меѓу училишта, без јавни часови во v1.<span class="ref">§4.7</span></p></div></div>
+      <div class="item" id="br-21"><span class="id">BR-21</span><div><p><b>Сликата никогаш не смее да го кочи тајмерот на прашањето.</b><span class="ref">§4.3</span></p></div></div>
+    </div>
+
+    <h2 id="br-session">Сесија во живо</h2>
+    <div class="items">
+      <div class="item" id="br-22"><span class="id">BR-22</span><div><p><b>Нема распоред на часови.</b> „Свесно одбивање, а не пропуст“: распоредот е дополнителна работа за поставување на системот која застарува секојпат кога училиштето ќе ги прераспредели часовите, а единствен бенефит е сортирање на листата.<span class="ref">§5.1</span></p></div></div>
+      <div class="item" id="br-23"><span class="id">BR-23</span><div><p><b>Серверот е авторитет за времето</b> за секое одбројување; клиентите само го прикажуваат.<span class="ref">§5.3</span></p></div></div>
+      <div class="item" id="br-24"><span class="id">BR-24</span><div><p><b>QR-кодот за приклучување важи најмногу 30 секунди.</b> Фотографиран код испратен на соученик дома престанува да работи речиси веднаш.<span class="ref">§5.4</span></p></div></div>
+      <div class="item" id="br-25"><span class="id">BR-25</span><div><p><b>Присуството во TeacherAid е сопствен запис.</b> Официјалното присуство останува во e-Дневник; TeacherAid никогаш не пишува во него и не го заменува.<span class="ref">§5.4, §8.1</span></p></div></div>
+      <div class="item" id="br-26"><span class="id">BR-26</span><div><p><b>Предвидувањето е стандардниот режим на вовед (opener).</b><span class="ref">§5.5</span></p></div></div>
+      <div class="item" id="br-27"><span class="id">BR-27</span><div><p><b>Поени за точен одговор, и поени за образложение — точно или погрешно. Соодносот меѓу нив е производна одлука и не смее да биде прилагодлив за наставникот.</b> „Тоа е самиот механизам, а не корисничка желба.“<span class="ref">§5.5</span></p></div></div>
+      <div class="item" id="br-28"><span class="id">BR-28</span><div><p><b>Образложенијата му се прикажуваат на класот без имиња.</b> Само конзолата на наставникот покажува кој што напишал.<span class="ref">§5.5</span></p></div></div>
+      <div class="item" id="br-29"><span class="id">BR-29</span><div><p><b>Поп-ап прашањата се активираат од страна на наставникот, никогаш преку распоред.</b> „Непредвидливоста е целата поентар.“<span class="ref">§5.6</span></p></div></div>
+      <div class="item" id="br-30"><span class="id">BR-30</span><div><p><b>Анонимните прашања се анонимни за соучениците, но не и за наставникот.</b> Причина: стравот околу кој се дизајнира е судот на врсниците, а не наставникот; тоа што наставникот знае кој прашува „ја прави оваа функција безбедна за водење, бидејќи нема анонимен канал за малтретирање или злоупотреба“. Стандарден лимит е 3 прашања по ученик за еден час.<span class="ref">§5.7</span></p>
+        <aside class="cost"><span class="eyebrow">Цена на оваа одлука / Cost of this decision</span><p>Белешката за податоци и приватност во моментов ветува дека истите се зачувуваат „без ID на ученикот“. Тоа сега е невистина и белешката мора да се коригира (corrected) пред да се издаде каков било ДПА (договор за обработка) или известување за родителите со старата формулација.</p></aside>
+      </div></div>
+      <div class="item" id="br-31"><span class="id">BR-31</span><div><p><b>Прашањето никогаш не се уредува додека сесијата е во тек.</b> Може само да биде прескокнато; „менувањето на текстот на прашањето додека триесет телефони го прикажуваат е точката каде што сесиите во живо пропаѓаат“.<span class="ref">§5.8</span></p></div></div>
+      <div class="item" id="br-32"><span class="id">BR-32</span><div><p><b>Одговорот даден за време на паднат сигнал се пресметува, со неговото оригинално време.</b><span class="ref">§5.9</span></p></div></div>
+      <div class="item" id="br-33"><span class="id">BR-33</span><div><p><b>Сесијата завршува само кога наставникот ќе притисне на End.</b> Без автоматско затворање.<span class="ref">§5.10</span></p>
+        <aside class="cost"><span class="eyebrow">Цена на оваа одлука / Cost of this decision</span><p>Заборавен допир ја остава сесијата отворена, поените непресметани и присуството незапишано, а класот останува на врвот на листата на наставникот сè додека некој не забележи. Изградете видлив индикатор за отворена сесија и направете го завршувањето на веќе отворена сесија од која било точка во апликацијата дејство со еден допир.</p></aside>
+      </div></div>
+    </div>
+
+    <h2 id="br-focus">Заклучување на фокусот (Focus lock) и телефони</h2>
+    <div class="items">
+      <div class="item" id="br-34"><span class="id">BR-34</span><div><p><b>Заклучувањето на фокусот е задолжително: без авторизација нема приклучување.</b> Ова го заменува однесувањето „не е блокиран, туку само означен“ опишано во постарите белешки.<span class="ref">§6.1</span></p>
+        <aside class="cost"><span class="eyebrow">Цена на оваа одлука / Cost of this decision</span><p>Во материјалите за прашања и одговори (Q&amp;A prep) моментално на судиите и родителите им се одговара: „ученикот може да го укине — и тогаш наставникот гледа индикатор за фокус. Тоа е социјално и техничко решение, а не затвор, и затоа родителите го прифаќаат.“ Тој одговор веќе не е вистинит и мора да се препише пред да биде даден повторно. Новиот одговор мора да го оправда строгото задолжително барање на личен телефон. Ова исто така значи дека ученичката апликација е строга зависност (hard dependency) за секој еден учесник — нема веб-алтернатива и нема постепено воведување.</p></aside>
+      </div></div>
+      <div class="item" id="br-35"><span class="id">BR-35</span><div><p><b>Блокирањето никогаш не чита што прави ученикот во другите апликации.</b> Единствено знае дека TeacherAid не е во преден план.<span class="ref">§6.2</span></p></div></div>
+      <div class="item" id="br-36"><span class="id">BR-36</span><div><p><b>Листата со блокади се поставува на ниво на целото училиште од страна на администраторот, а не поединечно од наставниците.</b> Причина: учениците ги споредуваат правилата помеѓу наставниците, а недоследните правила предизвикуваат кавги на часовите.<span class="ref">§6.3</span></p></div></div>
+      <div class="item" id="br-37"><span class="id">BR-37</span><div><p><b>Ученик кој нема телефон, или нема авторизација за заклучување, се означува како присутен, не добива поени, а причината се прикажува — никогаш не се означува како отсутен.</b> „Лажно отсуство поради техничко прилагодување на телефон е инцидентот кој стигнува до родителот, потоа до директорот, и ја прекинува пилот фазата.“<span class="ref">§6.4, §7.1</span></p></div></div>
+      <div class="item" id="br-38"><span class="id">BR-38</span><div><p><b>Започнете го барањето за Family Controls кај Apple навреме.</b> Потребни се недели за да се добие истото.<span class="ref">§6.2</span></p></div></div>
+    </div>
+
+    <h2 id="br-results">Резултати и оценување</h2>
+    <div class="items">
+      <div class="item" id="br-39"><span class="id">BR-39</span><div><p><b>Апликацијата не оценува — но ги содржи податоците врз основа на кои би можело да се изведе оценка, и таа разлика мора свесно да се нагласи, а не да се претпостави.</b><span class="ref">§8.4</span></p>
+        <aside class="cost"><span class="eyebrow">Цена на оваа одлука / Cost of this decision</span><p>Точноста по теми за секој ученик претставува запис за оценување на малолетник. Затоа има потреба од сопствена клаузула во ДПА, одговор наменет за родителите, и преработка на формулацијата „TeacherAid никогаш никого не оценува“ во постарите белешки и во деветтиот одговор од материјалите за прашања и одговори.</p></aside>
+      </div></div>
+      <div class="item" id="br-40"><span class="id">BR-40</span><div><p><b>Сетовите за вежбање се изборни и носат поени.</b><span class="ref">§8.3</span></p>
+        <aside class="cost"><span class="eyebrow">Цена на оваа одлука / Cost of this decision</span><p>Постарите белешки четири пати посебно тврдат дека TeacherAid нема домашни задачи и не е систем за управување со учењето (LMS). Таа граница сега е премината. Позиционирачката реченица — „сè друго е алатка за наставникот или игра за учениците, TeacherAid е самиот час“ — мора да се препише за да преживее, бидејќи родителите ќе го сфатат изборното вежбање како домашна задача.</p></aside>
+      </div></div>
+    </div>
+
+    <h2 id="br-points">Поени, значки и табели со резултати (leaderboards)</h2>
+    <div class="items">
+      <div class="item" id="br-41"><span class="id">BR-41</span><div><p><b>Вредностите за бодување се фиксни и идентични во секое училиште</b>, така што класната и училишната табела на резултати споредуваат еднакви вредности и ниту еден наставник не може вештачки да го крене својот клас. Единствениот исклучок: наставникот може да го исклучи бонусот за брзина за одреден клас — за групи каде тоа предизвикува преголемо брзање, или за предмет каде го наградува погрешниот инстинкт.<span class="ref">§13.1</span></p></div></div>
+      <div class="item" id="br-42"><span class="id">BR-42</span><div><p><b>Образложениот погрешен одговор мора да се бодува блиску до тивок точен одговор.</b> Тоа е механизмот на продуктивен неуспех (productive failure); затоа предлогот ги става поените за образложение на 8 наспроти 10 „наместо само симболични 2 поени“.<span class="ref">§13.1</span></p></div></div>
+      <div class="item" id="br-43"><span class="id">BR-43</span><div><p><b>Самите вредности за поените се само предложени, а не конечни одлучени.</b> Потребно е нивно одобрување пред почетокот на изградбата.<span class="lab">Предложено / Proposed</span><span class="ref">§13.1</span></p></div></div>
+      <div class="item" id="fr-44"><span class="id">BR-44</span><div><p><b>Значките се пуштаат во употреба дури откако ќе бидат целосно дизајнирани.</b> „Празните значки се полоши отколку да нема никакви.“<span class="ref">§13.2</span></p></div></div>
+      <div class="item" id="br-45"><span class="id">BR-45</span><div><p><b>Без низи (streaks).</b> Тие го казнуваат ученикот кој бил болен една недела, а притисокот од низите е делот кој родителите прв го забележуваат.<span class="ref">§13.2</span></p></div></div>
+      <div class="item" id="br-46"><span class="id">BR-46</span><div><p><b>Класните табели користат вистински имиња; училишните табели користат прекари по дифолт</b>, а училиштето може да одлучи поинаку.<span class="ref">§11.3, §13.3</span></p></div></div>
+      <div class="item" id="br-47"><span class="id">BR-47</span><div><p><b>Сезоните траат по еден семестар</b>, прилагодено на македонскиот училишен календар: сезоната се затвора кога се одлучуваат оценките и кога наставникот во секој случај има потреба од бројките за учество, а ученикот кој заостанал во октомври не е отпишан сè до мај.<span class="ref">§13.3</span></p></div></div>
+      <div class="item" id="br-48"><span class="id">BR-48</span><div><p><b>Без национална табела на резултати во v1.</b><span class="ref">§13.3</span></p></div></div>
+    </div>
+
+    <h2 id="br-data">Податоци, приватност и безбедност</h2>
+    <div class="items">
+      <div class="item" id="br-49"><span class="id">BR-49</span><div><p><b>Училиштето е контролор на податоците; TeacherAid е обработувач</b>, врз основа на ДПА (договор за обработка на лични податоци) со секое училиште. Важечкиот закон е ЗЗЛП (2020), усогласен со GDPR.<span class="ref">§11.2</span></p></div></div>
+      <div class="item" id="br-50"><span class="id">BR-50</span><div><p><b>Две клаузули кои ДПА сега мора задолжително да ги содржи:</b> податоци за оценување на малолетници по теми (§8.4) и анонимни прашања зачувани заедно со идентитетот на испраќачот (§5.7).<span class="ref">§11.2</span></p></div></div>
+      <div class="item" id="br-51"><span class="id">BR-51</span><div><p><b>Возраста за дигитална согласност според ЗЗЛП мора да биде проверена (verified) пред пуштањето на системот</b> — дифолт на GDPR е 16 години; државите можат да ја намалат до 13 години.<span class="lab">(верификувај / verify)</span><span class="ref">§11.2</span></p></div></div>
+      <div class="item" id="br-52"><span class="id">BR-52</span><div><p><b>Без постојан пристап на персоналот на TeacherAid до училишните податоци.</b> Пристапот е само за конкретен инцидент за поддршка, има временско ограничување, истекува автоматски, се бележи во дневникот, а училишниот администратор може да го види секое поединечно појавување.<span class="ref">§11.4</span></p></div></div>
+      <div class="item" id="br-53"><span class="id">BR-53</span><div><p><b>Барањата за извоз и бришење се извршуваат рачно, по писмено барање од училиштето.</b><span class="ref">§11.5</span></p>
+        <aside class="cost"><span class="eyebrow">Цена на оваа одлука / Cost of this decision</span><p>Без опција за самостоен извоз или бришење за администраторот. Рокот за одговор според ЗЗЛП е правно обврзувачки и сега зависи од едно лице кое може да биде на одмор. Со податоците за оценување на секој ученик во игра, влогот е многу повисок отколку кога беше напишана првичната белешка за приватност. Следете ги барањата на некое трајно место уште од првото поднесено.</p></aside>
+      </div></div>
+      <div class="item" id="br-54"><span class="id">BR-54</span><div><p><b>Задржување:</b> податоците од сесијата се чуваат за тековната училишна година плус уште една, а потоа се сумираат и бришат; месечните извештаи се чуваат во збирна форма без имиња; ученик кој заминува се брише во рок од 30 дена по барање од училиштето.<span class="ref">§11.6</span></p></div></div>
+      <div class="item" id="br-55"><span class="id">BR-55</span><div><p><b>Хостинг во ЕУ; енкрипција во транзит и во мирување; пристап заснован на улоги; ростерот никогаш не се испраќа до провајдерот на вештачка интелигенција.</b><span class="ref">§11.7</span></p></div></div>
+      <div class="item" id="br-56"><span class="id">BR-56</span><div><p><b>Промените во ростерот се прават исклучиво од училишниот администратор.</b> Приклучување на средина на годината се прикажува како такво; податоците за отстранет ученик се зачувуваат сè додека не се побара нивно бришење; историјата на префрлен ученик се сели со него — поделениот запис „е воедно бескорисен за наставникот и претставува проблем кога училиштето бара извоз на сè што се чува за тој ученик“.<span class="ref">§12</span></p></div></div>
+    </div>
+
+    <h2 id="br-onboard">Воведување (Onboarding) и пристапност</h2>
+    <div class="items">
+      <div class="item" id="br-57"><span class="id">BR-57</span><div><p><b>Секој клас одвојува еден час за поставување на системот пред првиот вистински предавачки час.</b> Непроверена претпоставка C.<span class="ref">§10.1</span></p></div></div>
+      <div class="item" id="br-58"><span class="id">BR-58</span><div><p><b>Водениот прв час мора успешно да профункционира педесет и пет пати во рамките на една недела без присуство на основач на системот.</b><span class="ref">§10.2</span></p></div></div>
+      <div class="item" id="br-59"><span class="id">BR-59</span><div><p><b>Пристапноста е само на основно ниво во v1.</b> Соодветен контраст, читливост од задниот дел на училницата и на евтин екран, никогаш само боја за означување точно или погрешно.<span class="ref">§10.4</span></p>
+        <aside class="cost"><span class="eyebrow">Цена на оваа одлука / Cost of this decision</span><p>Без дополнително време за поединечни ученици, без задолжителна поддршка за читач на екран, без гарантирано скалирање на текстот. Главното јадро на играта е „прочитај брзо, одговори во рок од дваесет секунди“, што е најтешко токму за оние ученици на кои најмногу им е потребно прилагодување — а во еден клас од 28 ученици секогаш ќе има неколку такви. Ова е евидентирано како познато ограничување, а не како технички превид. Очекувајте прашањето да биде покренато од некој родител, училишниот психолог или од ДПИ (Државниот просветен инспекторат).</p></aside>
+      </div></div>
+    </div>
+
+    <h2 id="br-doc">Правила во врска со самата спецификација</h2>
+    <div class="items">
+      <div class="item" id="br-60"><span class="id">BR-60</span><div><p><b>Онаму каде што спецификацијата и некоја постара белешка не се согласуваат, спецификацијата е во право.</b><span class="ref">§1</span></p></div></div>
+      <div class="item" id="br-61"><span class="id">BR-61</span><div><p><b>Сè што е означено со (verify / верификувај) е непроверено</b> и не смее да се третира како факт.<span class="ref">§1</span></p></div></div>
+    </div>
+
+    <h2 id="br-empty">Недефинирани случаи во оваа категорија</h2>
+    <div class="emptyset">
+      <div class="empty" id="e-39"><span class="tag"><span class="id">E-39</span>Недефиниран случај · кои дава одобрување</span><p>Тајмерите (§4.4) и вредностите за бодување (§13.1) „бараат одобрување“. Во текстот не е наведено кој го дава тоа одобрување.</p></div>
+      <div class="empty" id="e-40"><span class="tag"><span class="id">E-40</span>Недефиниран случај · копии во библиотеката откако наставникот ќе замине</span><p>Не е наведено што се случува со зачуваните часови на наставникот и копиите кај неговите колеги доколку наставникот го напушти училиштето (§4.7, §12).</p></div>
+      <div class="empty" id="e-41"><span class="tag"><span class="id">E-41</span>Недефиниран случај · локација на хостинг</span><p>„Хостинг во ЕУ“ (§11.7). Не се наведени конкретна држава ниту провајдер.</p></div>
+      <div class="empty" id="e-42"><span class="tag"><span class="id">E-42</span>Недефиниран случај · остатокот од ДПА</span><p>Дефинирани се само двете нови клаузули (§11.2). Другите одредби од договорот не се специфицирани.</p></div>
+      <div class="empty" id="e-43"><span class="tag"><span class="id">E-43</span>Недефиниран случај · известување за родителите</span><p>Се споменува дека известувањето за родителите треба да се прегледа пред првата недела (§14, претпоставка D) и дека е под влијание на задолжителното заклучување на фокусот (§6.1). Неговата содржина не е дефинирана во текстот.</p></div>
+      <div class="empty" id="e-44"><span class="tag"><span class="id">E-44</span>Недефиниран случај · што се подразбира под „сумирање“ (агрегација)</span><p>Податоците од сесиите се „сумираат и бришат“ по една училишна година плус уште една (§11.6). Што конкретно се чува во тие збирни податоци, и на кое ниво на детали, не е дефинирано.</p></div>
+    </div>
+
+  </div>
+</div>
+</section>
+
+<!-- ============ 6. EDGE CASES ============ -->
+<section class="slide" id="edge" data-title="6 · Гранични случаи и исклучоци" data-short="Гранични случаи">
+<div class="inner">
+  <div class="head">
+    <span class="eyebrow">Категорија 6 од 7</span>
+    <h1>Гранични случаи и исклучоци</h1>
+    <p class="def">Невообичаените или неуспешните ситуации кои спецификацијата ги предвидува, што се случува во секоја од нив, и зошто — проследено со ситуациите кои таа не ги опфаќа.</p>
+    <div class="stat" data-stat></div>
+  </div>
+  <nav class="subnav" aria-label="On this slide"></nav>
+  <div class="content">
+
+    <h2 id="ec-live">За време на сесија</h2>
+    <div class="tablewrap"><table>
+      <thead><tr><th>#</th><th>Ситуација</th><th>Што се случува</th><th>Зошто, според зборовите на спецификацијата</th><th>§</th></tr></thead>
+      <tbody>
+        <tr id="ec-1"><td><span class="id">EC-1</span></td><td>Се Guidance дека некое прашање е погрешно или нефункционо во средина на часот</td><td>Наставникот го прескокнува. Тоа се отстранува од сесијата, никој не се бодува за него, и приказот за класот јасно го известува тоа. Без уредување во живо; наставникот го поправа часот потоа.</td><td>„Менувањето на текстот на прашањето додека триесет телефони го прикажуваат е точката каде што сесиите во живо пропаѓаат.“</td><td>5.8</td></tr>
+        <tr id="ec-2"><td><span class="id">EC-2</span></td><td>Телефонот на некој ученик за момент го губи сигналот</td><td>Одговорите локално се зачувуваат во низа и се синхронизираат при повторно поврзување. Ученикот кој ќе одговори за време на 20-секунден прекин сè уште ги добива поените, со неговото оригинално време на одговор.</td><td>Учениците често користат мобилен интернет во бетонска зграда.</td><td>5.9</td></tr>
+        <tr id="ec-3"><td><span class="id">EC-3</span></td><td>Ученик изгледа дефокусиран (неангажиран), но всушност е офлајн</td><td>Конзолата ги прикажува „offline“ и „нема одговорено“ како две различни состојби.</td><td>„Гледано од предниот дел на училницата, прекинатата врска и незаинтересираниот ученик изгледаат идентично, а еден од нив е на пат да добие индикатор за фокус кој не го заслужил.“</td><td>5.9</td></tr>
+        <tr id="ec-4"><td><span class="id">EC-4</span></td><td>Сè пропаѓа — воопшто нема мрежа</td><td>Часот на наставникот е зачуван во кеш на нивниот уред. Тие сè уште ги имаат прашањата и можат да ги читаат гласно. Бодувањето паузира.</td><td>Часот мора да го преживее падот на мрежата.</td><td>5.9</td></tr>
+        <tr id="ec-5"><td><span class="id">EC-5</span></td><td>Наставникот заборава да притисне на End</td><td>Сесијата останува отворена, поените непресметани, присуството незапишано, а класот останува на врвот на листата. За ова постои видлив индикатор за отворена сесија и завршување на сесијата со еден допир од каде било во апликацијата.</td><td>Нема автоматско затворање, па заборавениот допир мора да се направи очигледен.</td><td>5.10</td></tr>
+        <tr id="ec-6"><td><span class="id">EC-6</span></td><td>Наставникот се внел во предавањето и не активира прашања</td><td>По неколку минути конзолата прикажува дискретна сугестија — без модален прозорец, без звук.</td><td>Ова е „начинот на неуспех кој создава празна контролна табла и прави училиштето да изгледа неактивно“.</td><td>5.6</td></tr>
+        <tr id="ec-7"><td><span class="id">EC-7</span></td><td>Некој ученик се приклучува доцна</td><td>Се означува како присутен, со временска ознака за доцнење.</td><td>Присуството содржи временска ознака.</td><td>5.4</td></tr>
+        <tr id="ec-8"><td><span class="id">EC-8</span></td><td>Некој ученик се најавува од втор уред</td><td>Првата најава завршува.</td><td>Една активна најава по корисничка сметка.</td><td>3.2</td></tr>
+        <tr id="ec-9"><td><span class="id">EC-9</span></td><td>Некој ученик го фотографира QR-кодот и му го испрати на соученик дома</td><td>Кодот престанува да работи во рок од 30 секунди.</td><td>QR-кодот се менува; ова „ја затвора дупката“ која беше откриена при судењето.</td><td>5.4</td></tr>
+        <tr id="ec-10"><td><span class="id">EC-10</span></td><td>Сликата во некое прашање сè уште не е вчитана</td><td>Тајмерот сепак си одбројува; никогаш не ја чека сликата.</td><td>Оптимизиран пат за слаб интернет за телефони со мобилни податоци.</td><td>4.3</td></tr>
+        <tr id="ec-11"><td><span class="id">EC-11</span></td><td>Поставување на проекторот додека чекаат триесет ученици</td><td>Приказот за класот се отвора како посебен прозорец со еден клик; onboarding-от експлицитно го опфаќа овој чекор.</td><td>Поставувањето на проширен екран (extended display) „е реална точка на триење (пречка)“.</td><td>5.2, 10.2</td></tr>
+        <tr id="ec-12"><td><span class="id">EC-12</span></td><td>Бонусот за брзина прави класот да избрзува со одговорите</td><td>Наставникот го исклучува бонусот за брзина за тој клас — единствената вредност за бодување која наставникот смее да ја менува.</td><td>Некои групи избрзуваат; некои предмети го наградуваат погрешниот инстинкт.</td><td>13.1</td></tr>
+        <tr id="ec-13"><td><span class="id">EC-13</span></td><td>Два различни класа работат по истиот час</td><td>Секое водење е сопствена сесија; наставникот може да спореди како поминале двата класа на истото прашање.</td><td>Еден ист објект за час, многу сесии.</td><td>4.5</td></tr>
+      </tbody>
+    </table></div>
+
+    <h2 id="ec-phones">Телефони и заклучување на фокусот</h2>
+    <div class="tablewrap"><table>
+      <thead><tr><th>#</th><th>Ситуација</th><th>Што се случува</th><th>Зошто, според зборовите на спецификацијата</th><th>§</th></tr></thead>
+      <tbody>
+        <tr id="ec-14"><td><span class="id">EC-14</span></td><td>Некој ученик не може или не сака да го авторизира заклучувањето на фокусот</td><td>Се третира исто како ученик без телефон: се означува како присутен, без поени, а причината се прикажува на контролната табла. Никогаш не се означува како отсутен.</td><td>„Лажно отсуство поради техничко прилагодување на телефон е инцидентот кој стигнува до родителот, потоа до директорот, и ја прекинува пилот фазата.“</td><td>6.4</td></tr>
+        <tr id="ec-15"><td><span class="id">EC-15</span></td><td>Нема телефон, празна батерија или нема мобилен интернет</td><td>Наставникот го означува ученикот како присутен со еден допир; без поени за тој час; контролната табла ја прикажува причината.</td><td>„Еден ист програмски пат (code path) кој покрива четири причини. Ќе се користи во речиси секој час.“</td><td>7.1</td></tr>
+        <tr id="ec-16"><td><span class="id">EC-16</span></td><td>Телефони кои прават отпор при поставувањето на системот</td><td>Наставникот е присутен за време на часот за поставување „за да ги среди оние пет телефони кои прават отпор“.</td><td>Алтернативата е трошење на тоа време непланирано за време на првиот вовед (opener).</td><td>10.1</td></tr>
+        <tr id="ec-17"><td><span class="id">EC-17</span></td><td>На ученик му е потребно прилагодување (accommodation) — дополнително време, читач на екран, поголем текст</td><td>Не е поддржано во v1. Евидентирано како познато ограничување.</td><td>„Очекувајте прашањето да биде покренато од некој родител, училишниот психолог или од ДПИ.“</td><td>10.4</td></tr>
+        <tr id="ec-18"><td><span class="id">EC-18</span></td><td>Ученик се спарува со уредот на друг соученик, или наставникот внесува одговори во негово име</td><td>Не е можно во v1.</td><td>Наведено исклучување.</td><td>7.2</td></tr>
+      </tbody>
+    </table></div>
+
+    <h2 id="ec-roster">Ростери (списоци) и персонал</h2>
+    <div class="tablewrap"><table>
+      <thead><tr><th>#</th><th>Ситуација</th><th>Што се случува</th><th>Зошто, според зборовите на спецификацијата</th><th>§</th></tr></thead>
+      <tbody>
+        <tr id="ec-19"><td><span class="id">EC-19</span></td><td>Некој ученик се запишува во училиштето на средина од годината</td><td>Администраторот го додава. Започнува со нула поени; табелата на класот покажува дека се приклучил подоцна.</td><td>Во спротивно „изгледа како да е расипано“.</td><td>12</td></tr>
+        <tr id="ec-20"><td><span class="id">EC-20</span></td><td>Некој ученик го напушта училиштето</td><td>Администраторот го отстранува. Нивните податоци се зачувуваат според правилото за задржување додека не се побара нивно бришење; се бришат во рок од 30 дена по барање на училиштето.</td><td>Правило за задржување.</td><td>12, 11.6</td></tr>
+        <tr id="ec-21"><td><span class="id">EC-21</span></td><td>Некој ученик се префрла во друг клас</td><td>Администраторот го префрла. Нивната историја се сели со нив.</td><td>Поделениот запис е бескорисен за наставникот и претставува проблем при барање за извоз на податоци.</td><td>12</td></tr>
+        <tr id="ec-22"><td><span class="id">EC-22</span></td><td>Некој наставник оди на подолго отсуство, се разболува или го напушта училиштето</td><td><b>Нема поддржан пат во v1.</b> Нивните класови остануваат заробени во корисничка сметка која никој не ја користи. Спецификацијата вели дека „ова сигурно ќе се случи уште во првата училишна година“.</td><td>Прераспределба на клас и втор наставник на ист клас се надвор од опсегот на v1.</td><td>12, 2</td></tr>
+        <tr id="ec-23"><td><span class="id">EC-23</span></td><td>Замена или ко-наставник (co-teacher) има потреба да води клас</td><td>Не е можно во v1.</td><td>„Без ко-настава (co-teaching), без замени.“</td><td>2</td></tr>
+        <tr id="ec-24"><td><span class="id">EC-24</span></td><td>Само еден наставник-лидер е активен во училиштето</td><td>Прегледот на користење за администраторот покажува кои наставници сè уште немаат започнато.</td><td>Раното предупредување мора да стигне до „некој во самата зграда перед месецот на обнова на лиценцата, а не после тоа“.</td><td>9.2</td></tr>
+        <tr id="ec-25"><td><span class="id">EC-25</span></td><td>Наставник ја заборава својата лозинка во 08:05 часот</td><td>Ресетирањето на лозинката е изградено така што е брзо на телефон.</td><td>Лозинките „го гарантираат тој итен повик за поддршка“.</td><td>3.1</td></tr>
+        <tr id="ec-26"><td><span class="id">EC-26</span></td><td>Нешто итно тргнува наопаку пред целиот клас</td><td>Директен канал до личност со еден допир.</td><td>„Статија со помош не му користи на наставник кој стои пред триесет ученици во 08:05 часот.“</td><td>10.3</td></tr>
+      </tbody>
+    </table></div>
+
+    <h2 id="ec-content">Содржина и предмети</h2>
+    <div class="tablewrap"><table>
+      <thead><tr><th>#</th><th>Ситуација</th><th>Што се случува</th><th>Зошто, според зборовите на спецификацијата</th><th>§</th></tr></thead>
+      <tbody>
+        <tr id="ec-27"><td><span class="id">EC-27</span></td><td>Предметот нема вчитан е-учебник</td><td>Наставникот наместо тоа внесува три реченици. Ова работи, без поврзаност со наставната програма.</td><td>Вчитани се само трите пилот предмети.</td><td>4.1, 2</td></tr>
+        <tr id="ec-28"><td><span class="id">EC-28</span></td><td>Некое прашање по физика или електроника не може да се напише со четири понудени опции</td><td>Бројчените прашања и точно/неточно постојат токму за ова.</td><td>Тие „не можат најискрено да се изразат преку четири понудени опции“.</td><td>4.2</td></tr>
+        <tr id="ec-29"><td><span class="id">EC-29</span></td><td>Наставник по физика или електроника има потреба од формула во прашањето</td><td>Визуелизацијата на математички и хемиски знаци е поддржана.</td><td>„Без ова, тие наставници воопшто не можат да ги напишат своите прашања.“</td><td>4.3</td></tr>
+        <tr id="ec-30"><td><span class="id">EC-30</span></td><td>Часот треба да се одржи како практична или лабораториска работа</td><td>Надвор од опсегот на v1. Користењето ќе изгледа помало во техничките училишта; затоа мерете ги резултатите по теоретски час.</td><td>Нивното исклучување „структурно го преполовува бројот на часови по наставник“.</td><td>2</td></tr>
+      </tbody>
+    </table></div>
+
+    <h2 id="ec-report">Извештаи, податоци и пилот фаза</h2>
+    <div class="tablewrap"><table>
+      <thead><tr><th>#</th><th>Ситуација</th><th>Што се случува</th><th>Зошто, според зборовите на спецификацијата</th><th>§</th></tr></thead>
+      <tbody>
+        <tr id="ec-31"><td><span class="id">EC-31</span></td><td>Одредено училиште е рангирано на деветто место од дванаесет</td><td>Споредбата се појавува само на втората страница, која не е наменета за проследување; првата страница останува погодна за споделување.</td><td>„Училиште рангирано на деветто место од дванаесет нема да проследи страница на која го пишува тоа.“</td><td>9.3</td></tr>
+        <tr id="ec-32"><td><span class="id">EC-32</span></td><td>Директорот има потреба од бројките од минатиот месец за општината</td><td>Трајниот приватен линк во секоја е-пошта со извештај води до сите претходни извештаи.</td><td>За да не мора „никого да прашува“.</td><td>9.3</td></tr>
+        <tr id="ec-33"><td><span class="id">EC-33</span></td><td>Барање за пристап до податоци пристигнува додека единственото лице за поддршка е на одмор</td><td>Не е решено во v1: барањата се обработуваат рачно и законскиот рок за одговор зависи од тоа лице. Следете ги барањата на сигурно место уште од првото поднесено.</td><td>Забележана цена во однос на одлуката за рачна обработка.</td><td>11.5</td></tr>
+        <tr id="ec-34"><td><span class="id">EC-34</span></td><td>Некој ученик бил болен цела недела</td><td>Ништо не е изгубено: нема низи (streaks), токму од оваа причина.</td><td>Низите „го казнуваат ученикот кој бил болен една недела“.</td><td>13.2</td></tr>
+        <tr id="ec-35"><td><span class="id">EC-35</span></td><td>Училиштето не отвора е-пошти за учениците</td><td>Ниту еден ученик не може да се најави и ништо друго не работи. Мора да биде потврдено со пилот училиштето пред почетокот на изградбата.</td><td>Претпоставка А — „најголемата поединечна непроверена претпоставка во спецификацијата“.</td><td>3.2, 14</td></tr>
+        <tr id="ec-36"><td><span class="id">EC-36</span></td><td>Apple не го доделува навреме правото за Family Controls</td><td>Ниту еден ученик со iOS систем нема да може да пристапи.</td><td>Претпоставка F; барањето трае со недели.</td><td>14, 6.2</td></tr>
+        <tr id="ec-37"><td><span class="id">EC-37</span></td><td>Авторските права за е-учебниците не можат да се расчистат со МОН/БРО</td><td>Примарниот влез за планирање и аргументот за легитимност пропаѓаат; функцијата не смее да се испорача.</td><td>Претпоставка B; „не е ставка од типот пушти-па-види“.</td><td>4.1, 14</td></tr>
+      </tbody>
+    </table></div>
+
+    <h2 id="ec-empty">Ситуации кои спецификацијата не ги опфаќа</h2>
+    <div class="emptyset">
+      <div class="empty" id="e-45"><span class="tag"><span class="id">E-45</span>Недефиниран случај · одговарање по истекот на тајмерот</span><p>Не е наведено што се случува со одговорот поднесен откако тајмерот на прашањето веќе истекол.</p></div>
+      <div class="empty" id="e-46"><span class="tag"><span class="id">E-46</span>Недефиниран случај · достигнување на лимитот на прашања</span><p>Не е наведено што гледа или што може да направи ученикот откако ќе го испрати своето трето анонимно прашање за време на еден час (§5.7).</p></div>
+      <div class="empty" id="e-47"><span class="tag"><span class="id">E-47</span>Недефиниран случај · приклучување на погрешна сесија</span><p>Ученикот може да се приклучи само во сесија за која е запишан (§3.2). Не е опишано што се случува кога ученикот ќе го скенира кодот од сесија на друг клас.</p></div>
+      <div class="empty" id="e-48"><span class="tag"><span class="id">E-48</span>Недефиниран случај · укинување на заклучувањето на фокусот на средина на часот</span><p>Спецификацијата вели дека ученик без авторизација не може да се приклучи (§6.1). Што се случува доколку ученикот ја укине авторизацијата по приклучувањето, не е наведено во текстот.</p></div>
+      <div class="empty" id="e-49"><span class="tag"><span class="id">E-49</span>Недефиниран случај · лаптопот на наставникот се исклучува од мрежа</span><p>Прекините кај телефоните (§5.9) и целосниот пад на системот (§5.9) се опфатени во текстот. Сепак, случајот кога само лаптопот на наставникот ја губи врската додека со телефоните сè е во ред, не е дефиниран.</p></div>
+      <div class="empty" id="e-50"><span class="tag"><span class="id">E-50</span>Недефиниран случај · приказот за класот се губи на средина од часот</span><p>Не е наведено што се случува доколку проектираниот прозорец се затвори или проекторот се расипе за време на часот (§5.2).</p></div>
+      <div class="empty" id="e-51"><span class="tag"><span class="id">E-51</span>Недефиниран случај · две отворени сесии</span><p>Не е наведено дали еден наставник може да има две отворени сесии истовремено — на пример, по заборавено притискање на End (§5.10).</p></div>
+      <div class="empty" id="e-52"><span class="tag"><span class="id">E-52</span>Недефиниран случај · неуспешно генерирање или генерирање премалку прашања</span><p>Генерирањето враќа 5–8 прашања (§4.1). Не е наведено што се случува доколку тоа падне или врати помалку прашања.</p></div>
+      <div class="empty" id="e-53"><span class="tag"><span class="id">E-53</span>Недефиниран случај · наставна единица која недостасува или е погрешна во е-учебникот</span><p>Не е наведено што прави наставникот кога наставната единица која му е потребна недостасува меѓу претходно вчитаните, или кога нејзината содржина е погрешна (§4.1).</p></div>
+      <div class="empty" id="e-54"><span class="tag"><span class="id">E-54</span>Недефиниран случај · е-поштата на ученикот се менува</span><p>Училишната е-пошта претставува идентитет на ученикот (§3.2). Не е наведено што се случува кога училиштето ќе ја смени или повторно издаде, или кога двајца ученици ја делат истата е-пошта.</p></div>
+      <div class="empty" id="e-55"><span class="tag"><span class="id">E-55</span>Недефиниран случај · повеќе од 35 ученици</span><p>Наведена е претпоставката за сесија со најмногу 35 ученици (§2). Не е наведено што се случува во поголеми класови.</p></div>
+      <div class="empty" id="e-56"><span class="tag"><span class="id">E-56</span>Недефиниран случај · доцно приклучување за време на воведот</span><p>Не е наведено дали ученик кој се приклучува откако воведот веќе започнал може сè уште да гласа и да даде свое образложение (§5.4, §5.5).</p></div>
+      <div class="empty" id="e-57"><span class="tag"><span class="id">E-57</span>Недефиниран случај · формат на бројчениот одговор</span><p>Бројченото прашање прифаќа внесен број во рамките на дозволеното отстапување (§4.2). Не е наведено како се обработуваат децималните запирки, мерните единици или празнините во внесот.</p></div>
+    </div>
+
+  </div>
+</div>
+</section>
+<!-- ============ 7. ACCEPTANCE CRITERIA ============ -->
+<section class="slide" id="acceptance" data-title="7 · Критериуми за прифаќање" data-short="Прифаќање" data-empty-slide="1">
+<div class="inner">
+  <div class="head">
+    <span class="eyebrow">Категорија 7 од 7</span>
+    <h1>Критериуми за прифаќање</h1>
+    <p class="def">Условите под кои секоја функција се смета за завршена — изјави кои можат да се проверат и да поминат или да паднат пред производот да биде предаден на училиштето.</p>
+    <div class="stat" data-stat></div>
+  </div>
+  <nav class="subnav" aria-label="On this slide"></nav>
+  <div class="content">
+
+    <h2 id="ac-status">Статус: недефинирано</h2>
+    <div class="empty" id="e-58"><span class="tag"><span class="id">E-58</span>Недефиниран случај · критериуми за прифаќање (acceptance criteria)</span><p>Спецификацијата не содржи критериуми за прифаќање. Ниту една изјава во неа не е дефинирана као услов за прифаќање, тест или „готово кога“. Според правилата усвоени за овој документ, ниту еден критериум не е изведен.</p></div>
+    <div class="empty" id="e-59"><span class="tag"><span class="id">E-59</span>Недефиниран случај · дефиниција за готово (definition of done)</span><p>Не постои дефиниција за „готово“ за ниту едно барање, област или верзија на производот.</p></div>
+    <div class="empty" id="e-60"><span class="tag"><span class="id">E-60</span>Недефиниран случај · критериуми за завршување на пилот фазата</span><p>Спецификацијата постојано споменува пилот фаза (§2, §9.3, §14), но не поставува услови под кои пилотот би се сметал за успешен или би завршил.</p></div>
+
+    <h2 id="ac-nearest">Што нуди спецификацијата, а што е блиско до тоа</h2>
+    <p>Овие ставки се зачувани таму каде што се во овој документ, а не се преформулирани како критериуми, бидејќи спецификацијата ги претставува како однесување на системот или како отворени прашања — а не како тестови.</p>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Што постои</th><th>Примери</th><th>Зошто не е критериум за прифаќање</th></tr></thead>
+      <tbody>
+        <tr><td>Мерливи вредности во рамките на барањата и правилата</td><td>QR-кодот се менува на секои 30 секунди (<a href="#fr-31">FR-31</a>); 3 анонимни прашања по ученик за еден час (<a href="#fr-38">FR-38</a>); 5–8 поп-ап прашања по час (<a href="#fr-15">FR-15</a>); 2–4 понудени опции по прашање со повеќекратен избор (<a href="#fr-18">FR-18</a>); една активна најава по корисничка сметка (<a href="#fr-6">FR-6</a>); бришење во рок од 30 дена (<a href="#fr-69">FR-69</a>); податоците се чуваат за тековната училишна година плус уште една (<a href="#fr-69">FR-69</a>)</td><td>Тие го опишуваат однесувањето на системот. Спецификацијата не вели дека тоа се условите под кои функцијата се прифаќа, ниту како тие би биле проверени.</td></tr>
+        <tr><td>Вредности кои сè уште не се експлицитно одлучени</td><td>Тајмери по формата на прашањето (<a href="#fr-23">FR-23</a>); вредности на поените по настан (<a href="#fr-74">FR-74</a>)</td><td>Не можат да се напишат критериуми за вредност која сè уште не е одобрена.</td></tr>
+        <tr><td>„Потребен доказ“ за шесте отворени претпоставки</td><td>Потврди ги е-поштите за учениците со пилот училиштето; писмен одговор од МОН/БРО; прашај го пилот наставникот; прегледај го известувањето за родителите пред првата недела (<a href="#ctx-assume">Контекст · Отворени претпоставки</a>)</td><td>Овие ги потврдуваат деловните премиси на кои почива производот, а не дали некоја функција работи.</td></tr>
+        <tr><td>Ставки означени со (verify / верификувај)</td><td>Возраста за дигитална согласност според ЗЗЛП (<a href="#br-51">BR-51</a>); претпоставка А (<a href="#ctx-assume">§14</a>)</td><td>Ова се факти кои треба да се проверат, а не функции кои треба да се прифатат.</td></tr>
+        <tr><td>Квалитети наведени без конкретна мерка</td><td>Ресетирањето на лозинката да е „брзо на телефон“ (<a href="#fr-2">FR-2</a>); „читливо од задниот дел на училницата и на евтин екран“ (<a href="#fr-64">FR-64</a>); потсетникот (nudge) да е „тивок“ (<a href="#fr-36">FR-36</a>)</td><td>Не е наведен праг ниту метод на проверка.</td></tr>
+      </tbody>
+    </table></div>
+
+    <h2 id="ac-fill">За да се пополни оваа категорија</h2>
+    <p>Некој мора да одлучи што значи „готово“ за секое барање од слајдот <a href="#requirements">Функционални барања</a>, и најпрво да ги одобри предложените тајмери и поени. Мерливите вредности наведени погоре се природна почетна точка; квалитетите наведени без мерка се местата каде што е потребна одлука пред да може да се напише соодветен критериум.</p>
+
+  </div>
+</div>
+</section>
+
+<!-- ============ APPENDIX ============ -->
+<section class="slide" id="appendix" data-title="Апендикс · Регистар, промени, речник" data-short="Апендикс">
+<div class="inner">
+  <div class="head">
+    <span class="eyebrow">Апендикс / Додаток</span>
+    <h1>Регистар, промени и речник</h1>
+    <p class="def">Секој недефиниран случај во една листа; што спецификацијата менува во претходните белешки; и речник со објаснувања на термини на обичен јазик.</p>
+    <div class="stat" data-stat></div>
+  </div>
+  <nav class="subnav" aria-label="On this slide"></nav>
+  <div class="content">
+
+    <h2 id="ap-register">Регистар на недефинирани случаи</h2>
+    <p>Сè што овој документ не можеше да пополни од спецификацијата, на едно место. Секој внес води до местото каде што се појавува. Оваа листа е налог за работа за оној кој ќе ја комплетира спецификацијата.</p>
+    <div class="tablewrap"><table id="register">
+      <thead><tr><th>#</th><th>Тема</th><th>Категорија</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+
+    <h2 id="ap-changes">Што менува спецификацијата во претходните белешки</h2>
+    <p>Налог за работа на самата спецификација за интеграција (§15): каде се застарени белешките од ерата на продажба (pitch-era), и во што се претвораат. Спецификацијата вели дека „ништо од ова сè уште не е направено“.</p>
+    <div class="tablewrap"><table>
+      <thead><tr><th>#</th><th>Белешка</th><th>Сега е застарено</th><th>Се претвора во</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>features, technical-architecture, handbook 2.4, Q&amp;A prep #2</td><td>„Не е блокиран, туку само означен“; „не е затворско решение — затоа родителите го прифаќаат“</td><td>Заклучувањето на фокусот е задолжително; без авторизација нема приклучување. Одговорот за родителите и судиите треба да се препише.</td></tr>
+        <tr><td>2</td><td>data-and-privacy</td><td>Анонимните прашања се зачувуваат „без ID на ученикот“</td><td>Анонимно за соучениците; наставникот го гледа испраќачот. Додајте клаузула во ДПА.</td></tr>
+        <tr><td>3</td><td>features, handbook 2.4, Q&amp;A prep #9</td><td>„TeacherAid никогаш никого не оценува“</td><td>Се зачувува точноста по теми за секој ученик. Додајте клаузула во ДПА и одговор за родителите.</td></tr>
+        <tr><td>4</td><td>product-overview, features, handbook 2.5</td><td>„Без домашни задачи“, „не е LMS“</td><td>Изборни сетови за вежбање по часот. Препишете ја позиционирачката линија.</td></tr>
+        <tr><td>5</td><td>Handbook 2.4, business-model-canvas block 2, features</td><td>Наставнички четбот</td><td>Уредувања со еден допир, без отворен разговор.</td></tr>
+        <tr><td>6</td><td>user-flows</td><td>„Името и класот се внесуваат еднаш“; „се додава со скенирање, а не со рачно внесување списоци“</td><td>Најава со училишна е-пошта; управување со ростерите од страна на администраторот.</td></tr>
+        <tr><td>7</td><td>user-flows</td><td>Екран „Денес“ кој имплицира распоред</td><td>Воопшто нема распоред на часови.</td></tr>
+        <tr><td>8</td><td>features, technical-architecture, product-overview</td><td>„Внеси три реченици“ како главен влез</td><td>Единицата од е-учебникот е примарен влез; три реченици е алтернатива (fallback). Додајте ја ставката за авторски права.</td></tr>
+        <tr><td>9</td><td>Every business note</td><td>„Приоритетна точка (beachhead) во приватна гимназија“</td><td>Пилот предметите историја, електроника и физика имплицираат стручно или техничко училиште.</td></tr>
+      </tbody>
+    </table></div>
+    <p>Исто така во однос на интеграцијата, според §15: додајте ги претпоставките А–F во регистарот на ризици и претпоставки; скратете ја белешката за функции (features note) на краток преглед и поставете линк до спецификацијата; отстранете ја реченицата за универзитети од опсегот на v1 секаде каде што таа подразбира обврска за разво (овие 15 институции остануваат во проценката на пазарот, а не во развојот на производот).</p>
+
+    <h2 id="ap-glossary">Речник</h2>
+    <p class="small">Објаснувања на термини на едноставен јазик за читателот. Спецификацијата ги користи овие термини без посебно да ги објасни; објаснувањата подолу се општо познати факти, а не преземени од самата спецификација.</p>
+    <dl class="gloss">
+      <dt>e-учебник / e-учебници</dt><dd>Национален електронски учебник/учебници за одреден предмет, издаден од страна на МОН и напишан од именувани автори.</dd>
+      <dt>e-Дневник</dt><dd>Официјалниот електронски дневник во кој се запишува присуството. TeacherAid никогаш не пишува во него.</dd>
+      <dt>МОН</dt><dd>Министерство за образование и наука на Северна Македонија.</dd>
+      <dt>БРО</dt><dd>Биро за развој на образованието, орган за наставни програми во рамките на министерството.</dd>
+      <dt>ДПИ</dt><dd>Државен просветен инспекторат.</dd>
+      <dt>ЗЗЛП</dt><dd>Закон за заштита на личните податоци (2020), македонскиот закон за заштита на податоци кој е усогласен со GDPR.</dd>
+      <dt>ДПА</dt><dd>Договор за обработка на лични податоци (Data processing agreement) помеѓу училиштето (контролор на податоци) и TeacherAid (обработувач).</dd>
+      <dt>гимназија / стручно / уметничко</dt><dd>Трите видови средни училишта: општо (гимназија), стручно и уметничко.</dd>
+      <dt>практична / лабораториска настава</dt><dd>Практична или лабораториска настава, за разлика од теоретските часови.</dd>
+      <dt>Focus lock</dt><dd>Термин на спецификацијата за функцијата во нативната телефонска апликација која ги блокира апликациите што го одвлекуваат вниманието за време на часот.</dd>
+      <dt>Opener</dt><dd>Прашањето за предвидување или дебата со кое започнува секој час.</dd>
+      <dt>Pop-up</dt><dd>Временски ограничено прашање кое наставникот го активира на секој телефон во текот на предавањето.</dd>
+      <dt>Class view / console</dt><dd>Двата прозорци на сесија во живо: оној кој се проектира и приватниот прозорец на наставникот.</dd>
+      <dt>Session</dt><dd>Едно водење (одржување) на час со еден клас. Истиот час може да се одржи во повеќе сесии.</dd>
+      <dt>Hypercorrection, productive failure</dt><dd>Ефекти од истражувања на учењето (learning research) кои спецификацијата ги цитира како причина за бодување на напишаното образложение без оглед на тоа дали е точно или погрешно.</dd>
+    </dl>
+
+    <h2 id="ap-method">Извор и метод</h2>
+    <p><b>Изворна датотека:</b> <code>teacher-aid-brain/Areas/product/feature-spec-v1.md</code>, 15 делови, креирана на 15 септември 2026 година, статус „draft — not yet integrated into the vault“.</p>
+    <p><b>Применети правила:</b> спецификацијата е единствениот извор; двете категории кои спецификацијата не ги разработува детално (кориснички приказни, критериуми за прифаќање) содржат само празни (недефинирани) случаи; секое тврдење го цитира својот изворен дел; документот е на македонски јазик со зачувани специфични англиски идентификатори; секој пропуст е нумериран и наведен во регистарот погоре.</p>
+    <p><b>Организирано на:</b> 17 септември 2026 година.</p>
+
+  </div>
+</div>
+</section>
+
+</main>
+
+<div class="nav" aria-label="Slide navigation">
+  <button type="button" id="prev" aria-label="Previous slide">&#8592;</button>
+  <button type="button" id="next" aria-label="Next slide">&#8594;</button>
+</div>
+
+<dialog id="contents" aria-label="Contents">
+  <div class="dl-h"><h2>Содржина</h2><button class="tbtn" type="button" id="close-contents">Затвори</button></div>
+  <ol class="dl-list" id="dl-list"></ol>
+</dialog>
+
+<script>
+(function(){
+  var deck = document.getElementById('deck');
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var nowEl = document.getElementById('now'), counterEl = document.getElementById('counter');
+  var prev = document.getElementById('prev'), next = document.getElementById('next');
+  var dlg = document.getElementById('contents'), dlList = document.getElementById('dl-list');
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var idx = 0;
+
+  /* Per-slide counts: items, empty cases; fill the header stat line and the cover list */
+  var totalItems = 0, totalEmpty = 0;
+  slides.forEach(function(s){
+    var items = s.querySelectorAll('.item, .flow, tr[id^="ec-"]').length;
+    var empties = s.querySelectorAll('.empty').length;
+    totalItems += items; totalEmpty += empties;
+    var stat = s.querySelector('[data-stat]');
+    if (stat) {
+      var parts = [];
+      if (s.hasAttribute('data-empty-slide')) parts.push('<span class="e">Статус <b>недефиниран случај</b></span>');
+      else if (items) parts.push('<span>Ставки <b>' + items + '</b></span>');
+      parts.push('<span class="e">Недефинирани случаи <b>' + empties + '</b></span>');
+      stat.innerHTML = parts.join('');
+    }
+    var st = document.querySelector('.cats .st[data-count="' + s.id + '"]');
+    if (st) {
+      if (s.hasAttribute('data-empty-slide')) { st.textContent = 'недефиниран случај'; st.classList.add('e'); }
+      else st.textContent = (items ? items + ' ставки' : '') + (items && empties ? ' · ' : '') + (empties ? empties + ' недефинирани' : '');
+    }
+  });
+  var ci = document.getElementById('c-items'), ce = document.getElementById('c-empty');
+  if (ci) ci.textContent = totalItems;
+  if (ce) ce.textContent = totalEmpty;
+
+  /* Sub-navigation per slide, built from its h2 headings */
+  slides.forEach(function(s){
+    var nav = s.querySelector('.subnav'); if (!nav) return;
+    var hs = s.querySelectorAll('.content h2'); if (!hs.length) { nav.remove(); return; }
+    var ol = document.createElement('ol');
+    hs.forEach(function(h, i){
+      if (!h.id) h.id = s.id + '-h' + i;
+      var li = document.createElement('li'), a = document.createElement('a');
+      a.href = '#' + h.id; a.textContent = h.textContent.replace(/\s+/g,' ').trim();
+      var n = 0, el = h.nextElementSibling;
+      while (el && el.tagName !== 'H2') { n += el.querySelectorAll('.item, .flow, .empty, tr[id^="ec-"]').length + (el.matches('.item, .flow, .empty') ? 1 : 0); el = el.nextElementSibling; }
+      if (n) { var c = document.createElement('span'); c.className = 'cnt'; c.textContent = n; a.appendChild(c); }
+      li.appendChild(a); ol.appendChild(li);
+    });
+    var lbl = document.createElement('p'); lbl.className = 'lbl'; lbl.textContent = 'На овој слајд';
+    nav.appendChild(lbl); nav.appendChild(ol);
+  });
+
+  /* Register of empty cases */
+  var reg = document.querySelector('#register tbody');
+  if (reg) {
+    document.querySelectorAll('.empty').forEach(function(e){
+      var slide = e.closest('.slide');
+      var id = e.querySelector('.id') ? e.querySelector('.id').textContent : '';
+      var tag = e.querySelector('.tag') ? e.querySelector('.tag').textContent : '';
+      var topic = tag.replace(id, '').replace(/^\s*(Empty case|Недефиниран случај)\s*·?\s*/i, '').trim();
+      var tr = document.createElement('tr');
+      tr.innerHTML = '<td><span class="id"></span></td><td><a></a></td><td></td>';
+      tr.children[0].firstChild.textContent = id;
+      var a = tr.children[1].firstChild; a.href = '#' + e.id; a.textContent = topic.charAt(0).toUpperCase() + topic.slice(1);
+      tr.children[2].textContent = slide ? slide.getAttribute('data-short') : '';
+      reg.appendChild(tr);
+    });
+  }
+
+  /* Contents dialog */
+  slides.forEach(function(s, i){
+    var li = document.createElement('li');
+    var b = document.createElement('button'); b.type = 'button';
+    var n = document.createElement('span'); n.className = 'n'; n.textContent = i === 0 ? '' : (i === slides.length - 1 ? 'A' : String(i));
+    var t = document.createElement('span'); t.className = 't'; t.textContent = s.getAttribute('data-title').replace(/^\S+\s·\s/, '');
+    var st = document.createElement('span'); st.className = 's';
+    if (s.hasAttribute('data-empty-slide')) { st.textContent = 'недефиниран случај'; st.classList.add('e'); }
+    else { var k = s.querySelectorAll('.empty').length; st.textContent = k ? k + ' недефинирани' : ''; }
+    b.appendChild(n); b.appendChild(t); b.appendChild(st); li.appendChild(b); dlList.appendChild(li);
+    b.addEventListener('click', function(){ dlg.close(); go(i); });
+  });
+  document.getElementById('open-contents').addEventListener('click', function(){ dlg.showModal(); });
+  document.getElementById('close-contents').addEventListener('click', function(){ dlg.close(); });
+  dlg.addEventListener('click', function(e){ if (e.target === dlg) dlg.close(); });
+
+  /* Navigation */
+  function go(i, smooth){
+    i = Math.max(0, Math.min(slides.length - 1, i));
+    deck.scrollTo({ left: i * deck.clientWidth, behavior: (smooth === false || reduced) ? 'auto' : 'smooth' });
+  }
+  function update(){
+    counterEl.textContent = (idx + 1) + ' / ' + slides.length;
+    nowEl.textContent = slides[idx].getAttribute('data-title');
+    prev.disabled = idx === 0; next.disabled = idx === slides.length - 1;
+    Array.prototype.forEach.call(dlList.children, function(li, i){ li.classList.toggle('cur', i === idx); });
+    var h = '#' + slides[idx].id;
+    if (location.hash !== h) { try { history.replaceState(null, '', h); } catch (e) {} }
+  }
+  var raf = null;
+  deck.addEventListener('scroll', function(){
+    if (raf) return;
+    raf = requestAnimationFrame(function(){
+      raf = null;
+      var i = Math.round(deck.scrollLeft / deck.clientWidth);
+      if (i !== idx) { idx = i; update(); }
+    });
+  }, { passive: true });
+  prev.addEventListener('click', function(){ go(idx - 1); });
+  next.addEventListener('click', function(){ go(idx + 1); });
+  window.addEventListener('keydown', function(e){
+    if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (dlg.open) return;
+    if (e.target && e.target.closest && e.target.closest('input, textarea, select')) return;
+    if (e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); go(idx + 1); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); go(idx - 1); }
+    else if (e.key === 'Home') { e.preventDefault(); go(0); }
+    else if (e.key === 'End') { e.preventDefault(); go(slides.length - 1); }
+  });
+  window.addEventListener('resize', function(){ go(idx, false); });
+
+  /* In-document links: jump to the slide, then to the target inside it */
+  function jumpTo(id, smooth){
+    var target = document.getElementById(id); if (!target) return false;
+    var slide = target.closest('.slide'); if (!slide) return false;
+    var si = slides.indexOf(slide);
+    go(si, smooth);
+    if (target !== slide) {
+      var top = target.getBoundingClientRect().top - slide.getBoundingClientRect().top + slide.scrollTop - 16;
+      slide.scrollTo({ top: Math.max(0, top), behavior: (smooth === false || reduced) ? 'auto' : 'smooth' });
+      target.classList.remove('flash'); void target.offsetWidth; target.classList.add('flash');
+    } else {
+      slide.scrollTo({ top: 0, behavior: 'auto' });
+    }
+    return true;
+  }
+  document.addEventListener('click', function(e){
+    var a = e.target.closest && e.target.closest('a[href^="#"]'); if (!a) return;
+    var id = a.getAttribute('href').slice(1); if (!id) return;
+    if (jumpTo(id)) e.preventDefault();
+  });
+
+  /* Start at the slide in the address bar, if any */
+  var startId = location.hash.slice(1);
+  if (!startId || !jumpTo(startId, false)) go(0, false);
+  update();
+})();
+</script>
+</body>
+</html>

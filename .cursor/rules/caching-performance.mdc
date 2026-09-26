@@ -1,0 +1,17 @@
+---
+description: Caching and Redis performance invariants for TeacherAid adapters
+globs: "**/{adapter/out/**/*.java,*Cache*.java,*Redis*.java,*Web*.java}"
+alwaysApply: false
+---
+
+# Caching and performance
+
+Postgres is the system of record. Redis is ephemeral live state only ([ADR 0007](../../docs/adrs/0007-redis-live-clocks.md)): join HMAC TTL ≤ 30s, `deadline_at`, presence, student `jti`. Never store answers, attendance, or the point ledger in Redis.
+
+- Cache keys include `schoolId` (plus `classId` / `sessionId` when scoped). No unkeyed `@Cacheable("roster")`.
+- Authenticated `/api/v1` JSON: `Cache-Control: private, no-store`. No CDN on tenant or session payloads.
+- CDN / object storage is for question images (BR-21) and frontend static assets in other repos.
+- Do not add `@Cacheable` in Phase 0–1. Do not cache LLM output as truth (BR-16).
+- Redis loss: refuse new joins, pause timers, still accept answers into Postgres.
+- Never log cached answer bodies, join tokens, or report URLs.
+- Empty cases (E-33, E-49) stay empty. Skill: `.cursor/skills/caching-performance/SKILL.md`.

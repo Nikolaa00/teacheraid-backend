@@ -1,0 +1,18 @@
+---
+description: Hexagonal module layout and dependency rules for TeacherAid Java
+globs: "**/*.java"
+alwaysApply: false
+---
+
+# Hexagonal modules
+
+Package as `com.teacheraid.<module>.{domain, application, adapter.in, adapter.out}`.
+
+- `domain` does not import Spring Web, Spring AI, Redis, or JPA annotations on aggregates.
+- `@Transactional` only on application services.
+- Cross-module calls: application APIs and outbox events, not shared JPA entities.
+- Shared kernel stays tiny: `SchoolId`, `UserId`, `ClassId`, `Clock`.
+- Thin MVC adapters live in `adapter.in.web` only. Do not grow a global `service` layer.
+- ArchUnit must fail if `domain` depends on `org.springframework.web`, `org.springframework.ai`, or Redis.
+
+Aggregates when feature work starts: `Lesson`, `Session`, `SchoolClass`. Session state machine: `lobby → opener → teaching → review → ended`. Snapshot questions into `session_question` at start. Copy-on-write library never writes back.

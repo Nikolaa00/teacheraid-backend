@@ -1,0 +1,28 @@
+---
+description: Security and privacy invariants from the TeacherAid v1 spec
+alwaysApply: true
+---
+
+# Security and privacy
+
+Three school audiences plus support: teacher/admin password JWT; student OIDC (Google Workspace or Entra); staff IdP; headmaster has **no login** (`GET /r/{token}` only).
+
+```java
+// BAD
+String schoolId = request.getParameter("schoolId");
+log.info("answer={}", answer.getBody());
+
+// GOOD
+SchoolId schoolId = principal.schoolId(); // from token
+log.info("answer accepted", kv("sessionId", sessionId), kv("studentId", studentId));
+```
+
+- Teacher scoped to `class.teacher_id = principal` (BR-3).
+- Admin **must not** read answers, reasons, anonymous bodies, or per-topic student results (BR-4). Enforce in queries, not UI.
+- Class-view STOMP payloads: no names, no inbox (BR-7).
+- Join tokens HMAC, TTL ≤ 30s, hashed invites/report tokens at rest.
+- Passwords: Argon2id or current Spring Security BCrypt. One active student session (FR-6).
+- Never log answer bodies, reasons, inbox text, passwords, join tokens, report URLs.
+- No IDFV/GAID; `push_token` is the only device identifier (FR-66).
+- Roster never sent to an LLM (FR-70). Support access only via time-boxed `staff_access_grant`.
+- Postgres MCP, when added, is localhost `teacheraid_dev` only — never a school database.

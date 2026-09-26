@@ -1,0 +1,19 @@
+---
+description: Constrained Spring AI generation — no chatbot, no roster, typed refinements only
+globs: "**/generation/**/*.java"
+alwaysApply: false
+---
+
+# Spring AI generation
+
+The spec forbids an open-ended teacher chatbot (BR-17). `GenerationPort` exposes only `generate` and `refine`.
+
+- Five typed refinements: Easier, Harder, More questions, Make opener debate/prediction, Shorter timers. No `userPrompt`.
+- `lesson` never imports Spring AI. Adapter lives in `generation.adapter.out`.
+- Structured output (JSON schema: opener, 5–8 questions, timers, review summary). Macedonian.
+- RAG only for that `unit_id`. Three-sentence fallback skips RAG.
+- Null `rights_cleared_at` → do not call the LLM (`RIGHTS_NOT_CLEARED`).
+- PII firewall fail-closed. Never send roster, names, or emails (FR-70).
+- Teacher reviews before students see content (BR-16).
+- Provider is configuration (E-27). Local/dev uses a stub.
+- Audit `generation_run` without storing roster.
