@@ -19,4 +19,4 @@ Modules: `identity` `school` `curriculum` `lesson` `generation` `live-session` `
 
 Build order: identity/roster → lesson fixtures → live session → Spring AI → practice/reports → focus APIs. Do not skip to generation or live session.
 
-Canonical: `AGENTS.md`, `docs/spec/README.md`, `.cursor/skills/spring-boot-professional/`.
+Canonical: `AGENTS.md`, `docs/spec/README.md`, `.cursor/skills/spring-boot-professional/`, `.cursor/skills/git-workflow/`.

@@ -60,3 +60,7 @@ Not microservices. Not classic three-layer MVC as the app. Not Clean Architectur
 - Roster never sent to an LLM (FR-70). Support access only via time-boxed `staff_access_grant`.
 
 When writing Java, follow `.cursor/skills/spring-boot-professional/SKILL.md`.
+
+## Git
+
+Remote: [github.com/Nikolaa00/teacheraid-backend](https://github.com/Nikolaa00/teacheraid-backend). Branch from `main` per phase (`feature/phase-1-identity`). Short descriptive commits (one sub-phase when possible). Always open a pull request into `main`. See `.cursor/skills/git-workflow/SKILL.md`.

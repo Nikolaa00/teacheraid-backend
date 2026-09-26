@@ -1,0 +1,14 @@
+---
+description: Git branches, short commits, and pull requests for TeacherAid
+alwaysApply: true
+---
+
+# Git workflow
+
+`main` is protected by process: no feature commits on `main`. Work on a branch created from latest `main`.
+
+- **New phase:** `feature/phase-N-<short>` (e.g. `feature/phase-1-identity`). Optional smaller PR: `feature/1.1-flyway`.
+- **Commits:** short, descriptive, one concern (prefer one commit per sub-phase). No “WIP” / “misc”.
+- **Always** open a pull request into `main` (`gh pr create --base main`). Do not push phase work straight onto `main`.
+- Never commit `.env`, secrets, school data, or `target/`.
+- Skill: `.cursor/skills/git-workflow/SKILL.md`.
