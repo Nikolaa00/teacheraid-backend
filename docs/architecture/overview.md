@@ -4,7 +4,7 @@ Build roadmap and learning guide: [build-and-architecture-guide.md](build-and-ar
 
 TeacherAid v1 is a **modular monolith** (Spring Modulith) with **hexagonal modules** and **DDD tactical patterns** where invariants exist. One Spring Boot process, one PostgreSQL, one Redis. Multi-platform clients share one API.
 
-Canonical decisions: [ADRs](../adrs/README.md). Agent rules: [AGENTS.md](../../AGENTS.md). Spec: [tea-for-the-boys.html](../spec/tea-for-the-boys.html).
+Canonical decisions: [ADRs](../adrs/README.md). Agent rules: [AGENTS.md](../../AGENTS.md). Spec: [tea-for-the-boys.html](../spec/tea-for-the-boys.html). Git: feature branch from `main` per phase, then a pull request.
 
 ## Why this shape
 
